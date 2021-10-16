@@ -131,7 +131,7 @@ contract ItemsFacet is Modifiers {
   ///@notice Query the item type of a particular item
   ///@param _itemId Item to query
   ///@return installationType A struct containing details about the item type of an item with identifier `_itemId`
-  function getInstallationType(uint256 _itemId) public view returns (Installation memory installationType) {
+  function getInstallationType(uint256 _itemId) external view returns (Installation memory installationType) {
     require(_itemId < s.installationTypes.length, "ItemsFacet: Item type doesn't exist");
     installationType = s.installationTypes[_itemId];
   }
@@ -139,7 +139,7 @@ contract ItemsFacet is Modifiers {
   ///@notice Query the item type of multiple  items
   ///@param _itemIds An array containing the identifiers of items to query
   ///@return itemTypes_ An array of structs,each struct containing details about the item type of the corresponding item
-  function getItemTypes(uint256[] calldata _itemIds) external view returns (Installation[] memory itemTypes_) {
+  function getInstallationTypes(uint256[] calldata _itemIds) external view returns (Installation[] memory itemTypes_) {
     if (_itemIds.length == 0) {
       itemTypes_ = s.installationTypes;
     } else {
