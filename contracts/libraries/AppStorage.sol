@@ -10,7 +10,10 @@ struct Installation {
 }
 
 struct AppStorage {
-  mapping(uint256 => Installation) installationTypes;
+  uint256 itemCount;
+  string baseUri;
+  Installation[] installationTypes;
+  //ERC998 vars
   mapping(address => mapping(uint256 => mapping(uint256 => uint256))) nftItemBalances;
   mapping(address => mapping(uint256 => uint256[])) nftItems;
   mapping(address => mapping(uint256 => mapping(uint256 => uint256))) nftItemIndexes;
@@ -29,6 +32,8 @@ library LibAppStorage {
 
 contract Modifiers {
   AppStorage internal s;
+
+  // modifier onlyParcelOwner() {}
 
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
