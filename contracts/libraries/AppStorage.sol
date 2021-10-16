@@ -3,14 +3,12 @@ pragma solidity 0.8.9;
 import {LibDiamond} from "./LibDiamond.sol";
 
 struct Installation {
-  address owner;
-  uint256 itemId;
+  uint64 itemId;
   uint256 width;
   uint256 height;
 }
 
 struct AppStorage {
-  uint256 itemCount;
   string baseUri;
   Installation[] installationTypes;
   //ERC998 vars
