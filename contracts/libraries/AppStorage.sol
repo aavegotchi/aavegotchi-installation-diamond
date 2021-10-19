@@ -39,8 +39,8 @@ struct AppStorage {
   mapping(address => uint256[]) ownerItems;
   mapping(address => mapping(uint256 => uint256)) ownerItemIndexes;
   //Installation metadata
-  mapping(uint16 => Reservoir) levelToReservoir;
-  mapping(uint16 => Harvester) levelToHarvester;
+  // mapping(uint16 => Reservoir) levelToReservoir;
+  // mapping(uint16 => Harvester) levelToHarvester;
 }
 
 library LibAppStorage {

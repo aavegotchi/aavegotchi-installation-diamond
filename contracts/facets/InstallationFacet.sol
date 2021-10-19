@@ -159,6 +159,10 @@ contract ItemsFacet is Modifiers {
     return LibStrings.strWithUint(s.baseUri, _id);
   }
 
+  /***********************************|
+   |             Write Functions        |
+   |__________________________________*/
+
   /**
         @notice Set the base url for all voucher types
         @param _value The new base url        
@@ -171,7 +175,10 @@ contract ItemsFacet is Modifiers {
     }
   }
 
-  /***********************************|
-   |             Write Functions        |
-   |__________________________________*/
+  function craftInstallations(uint256[] calldata _itemIds, uint256[] calldata _quantities) external {
+    //take the required alchemica
+    //put the wearable into a queue
+    //each wearable needs a unique queue id
+    //after queue is over, user can claim installation
+  }
 }
