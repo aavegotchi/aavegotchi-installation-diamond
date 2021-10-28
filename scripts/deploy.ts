@@ -1,33 +1,47 @@
-/* global ethers hre */
-/* eslint prefer-const: "off" */
-
 //@ts-ignore
+import { Signer } from "@ethersproject/abstract-signer";
 import { ethers } from "hardhat";
+import {
+  DiamondCutFacet,
+  DiamondInit__factory,
+  Diamond__factory,
+  OwnershipFacet,
+} from "../typechain";
+import { gasPrice } from "./helperFunctions";
 
 const { getSelectors, FacetCutAction } = require("./libraries/diamond.js");
 
-async function deployDiamond() {
-  const accounts = await ethers.getSigners();
-  const contractOwner = accounts[0];
+export async function deployDiamond() {
+  const accounts: Signer[] = await ethers.getSigners();
+  const deployer = accounts[0];
+  const deployerAddress = await deployer.getAddress();
+  console.log("Deployer:", deployerAddress);
 
   // deploy DiamondCutFacet
   const DiamondCutFacet = await ethers.getContractFactory("DiamondCutFacet");
-  const diamondCutFacet = await DiamondCutFacet.deploy();
+  const diamondCutFacet = await DiamondCutFacet.deploy({
+    gasPrice: gasPrice,
+  });
   await diamondCutFacet.deployed();
   console.log("DiamondCutFacet deployed:", diamondCutFacet.address);
 
   // deploy Diamond
-  const Diamond = await ethers.getContractFactory("Diamond");
+  const Diamond = (await ethers.getContractFactory(
+    "Diamond"
+  )) as Diamond__factory;
   const diamond = await Diamond.deploy(
-    contractOwner.address,
-    diamondCutFacet.address
+    deployerAddress,
+    diamondCutFacet.address,
+    { gasPrice: gasPrice }
   );
   await diamond.deployed();
   console.log("Diamond deployed:", diamond.address);
 
   // deploy DiamondInit
-  const DiamondInit = await ethers.getContractFactory("DiamondInit");
-  const diamondInit = await DiamondInit.deploy();
+  const DiamondInit = (await ethers.getContractFactory(
+    "DiamondInit"
+  )) as DiamondInit__factory;
+  const diamondInit = await DiamondInit.deploy({ gasPrice: gasPrice });
   await diamondInit.deployed();
   console.log("DiamondInit deployed:", diamondInit.address);
 
@@ -42,7 +56,9 @@ async function deployDiamond() {
   const cut = [];
   for (const FacetName of FacetNames) {
     const Facet = await ethers.getContractFactory(FacetName);
-    const facet = await Facet.deploy();
+    const facet = await Facet.deploy({
+      gasPrice: gasPrice,
+    });
     await facet.deployed();
     console.log(`${FacetName} deployed: ${diamondInit.address}`);
     cut.push({
@@ -52,21 +68,40 @@ async function deployDiamond() {
     });
   }
 
-  // upgrade diamond with facets
-  // console.log("Diamond Cut:", cut);
-  const diamondCut = await ethers.getContractAt("IDiamondCut", diamond.address);
-  let tx;
-  let receipt;
+  const diamondCut = (await ethers.getContractAt(
+    "IDiamondCut",
+    diamond.address
+  )) as DiamondCutFacet;
 
-  // call to init function
-  let functionCall = diamondInit.interface.encodeFunctionData("init", []);
-  tx = await diamondCut.diamondCut(cut, diamondInit.address, functionCall);
+  // call to init function // replace zero address with realmDiamond address
+  const functionCall = diamondInit.interface.encodeFunctionData("init", [
+    "0x0000000000000000000000000000000000000000",
+  ]);
+  const tx = await diamondCut.diamondCut(
+    cut,
+    diamondInit.address,
+    functionCall,
+    { gasPrice: gasPrice }
+  );
   console.log("Diamond cut tx: ", tx.hash);
-  receipt = await tx.wait();
+  const receipt = await tx.wait();
   if (!receipt.status) {
     throw Error(`Diamond upgrade failed: ${tx.hash}`);
   }
   console.log("Completed diamond cut");
+
+  const ownershipFacet = (await ethers.getContractAt(
+    "OwnershipFacet",
+    diamond.address
+  )) as OwnershipFacet;
+  const diamondOwner = await ownershipFacet.owner();
+  console.log("Diamond owner is:", diamondOwner);
+
+  if (diamondOwner !== deployerAddress) {
+    throw new Error(
+      `Diamond owner ${diamondOwner} is not deployer address ${deployerAddress}!`
+    );
+  }
 
   return diamond.address;
 }
@@ -81,5 +116,3 @@ if (require.main === module) {
       process.exit(1);
     });
 }
-
-exports.deployDiamond = deployDiamond;

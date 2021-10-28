@@ -2,12 +2,13 @@
 pragma solidity 0.8.9;
 
 import {ERC998, ItemTypeIO} from "../libraries/LibERC998.sol";
-import {LibAppStorage, Installation, Modifiers} from "../libraries/AppStorage.sol";
+import {LibAppStorage, Installation, InstallationQueue, Modifiers} from "../libraries/AppStorage.sol";
 import {LibStrings} from "../libraries/LibStrings.sol";
 import {LibMeta} from "../libraries/LibMeta.sol";
 import {LibERC1155} from "../libraries/LibERC1155.sol";
+import {LibERC20} from "../libraries/LibERC20.sol";
 
-contract ItemsFacet is Modifiers {
+contract InstallationFacet is Modifiers {
   //using LibAppStorage for AppStorage;
 
   event TransferToParent(address indexed _toContract, uint256 indexed _toTokenId, uint256 indexed _tokenTypeId, uint256 _value);
@@ -109,7 +110,7 @@ contract ItemsFacet is Modifiers {
         @return bals   The _owner's balance of the token types requested (i.e. balance for each (owner, id) pair)
      */
   function balanceOfBatch(address[] calldata _owners, uint256[] calldata _ids) external view returns (uint256[] memory bals) {
-    require(_owners.length == _ids.length, "ItemsFacet: _owners length not same as _ids length");
+    require(_owners.length == _ids.length, "InstallationFacet: _owners length not same as _ids length");
     bals = new uint256[](_owners.length);
     for (uint256 i; i < _owners.length; i++) {
       uint256 id = _ids[i];
@@ -132,7 +133,7 @@ contract ItemsFacet is Modifiers {
   ///@param _itemId Item to query
   ///@return installationType A struct containing details about the item type of an item with identifier `_itemId`
   function getInstallationType(uint256 _itemId) external view returns (Installation memory installationType) {
-    require(_itemId < s.installationTypes.length, "ItemsFacet: Item type doesn't exist");
+    require(_itemId < s.installationTypes.length, "InstallationFacet: Item type doesn't exist");
     installationType = s.installationTypes[_itemId];
   }
 
@@ -155,7 +156,7 @@ contract ItemsFacet is Modifiers {
         @return URI for token type
     */
   function uri(uint256 _id) external view returns (string memory) {
-    require(_id < s.installationTypes.length, "ItemsFacet: Item _id not found");
+    require(_id < s.installationTypes.length, "InstallationFacet: Item _id not found");
     return LibStrings.strWithUint(s.baseUri, _id);
   }
 
@@ -168,17 +169,53 @@ contract ItemsFacet is Modifiers {
         @param _value The new base url        
     */
   function setBaseURI(string memory _value) external onlyOwner {
-    // require(LibMeta.msgSender() == s.contractOwner, "ItemsFacet: Must be contract owner");
     s.baseUri = _value;
     for (uint256 i; i < s.installationTypes.length; i++) {
       emit LibERC1155.URI(LibStrings.strWithUint(_value, i), i);
     }
   }
 
-  function craftInstallations(uint256[] calldata _itemIds, uint256[] calldata _quantities) external {
-    //take the required alchemica
-    //put the wearable into a queue
-    //each wearable needs a unique queue id
+  function craftInstallations(uint256[] calldata _installationTypes) external {
+    for (uint8 i = 0; i < _installationTypes.length; i++) {
+      //take the required alchemica
+      for (uint8 j = 0; j < s.installationTypes[i].alchemicaCost.length; i++) {
+        LibERC20.transferFrom(s.alchemicaAddresses[j], msg.sender, address(this), s.installationTypes[i].alchemicaCost[j]);
+      }
+      //put the installation into a queue
+      s.installationQueue[msg.sender][s.queuesIds[msg.sender]] = InstallationQueue(msg.sender, block.number, i);
+      //each wearable needs a unique queue id
+      s.queuesIds[msg.sender]++;
+    }
     //after queue is over, user can claim installation
   }
+
+  function claimInstallation(uint256 _queueId) external {
+    require(msg.sender == s.installationQueue[msg.sender][_queueId].owner);
+    uint256 readyBlock = s.installationQueue[msg.sender][_queueId].startBlock +
+      s.installationTypes[s.installationQueue[msg.sender][_queueId].installationType].craftTime;
+    require(block.timestamp >= readyBlock, "InstallationFacet: installation not ready");
+    // mint installation
+  }
+
+  /***********************************|
+   |             Owner Functions        |
+   |__________________________________*/
+
+  function addInstallationTypes(Installation[] calldata _installationTypes) external onlyOwner {
+    for (uint16 i = 0; i < _installationTypes.length; i++) {
+      s.installationTypes.push(
+        Installation(
+          _installationTypes[i].installationType,
+          _installationTypes[i].level,
+          _installationTypes[i].width,
+          _installationTypes[i].height,
+          _installationTypes[i].alchemicaType,
+          _installationTypes[i].alchemicaCost,
+          _installationTypes[i].craftTime
+        )
+      );
+    }
+  }
+
+  function updateInstallationType(Installation memory _updatedInstallation) external onlyOwner {}
 }
