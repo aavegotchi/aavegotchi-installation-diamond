@@ -3,7 +3,7 @@ import { InstallationFacet } from "../typechain";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { deployDiamond } from "../scripts/deploy";
-import { Installation } from "../types";
+import { InstallationType } from "../types";
 
 let diamondAddress;
 let installationFacet: InstallationFacet;

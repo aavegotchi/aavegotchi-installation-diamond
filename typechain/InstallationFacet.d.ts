@@ -25,7 +25,7 @@ interface InstallationFacetInterface extends ethers.utils.Interface {
     "balanceOf(address,uint256)": FunctionFragment;
     "balanceOfBatch(address[],uint256[])": FunctionFragment;
     "balanceOfToken(address,uint256,uint256)": FunctionFragment;
-    "claimInstallation(uint256)": FunctionFragment;
+    "claimInstallations(uint256[])": FunctionFragment;
     "craftInstallations(uint256[])": FunctionFragment;
     "getInstallationType(uint256)": FunctionFragment;
     "getInstallationTypes(uint256[])": FunctionFragment;
@@ -34,7 +34,7 @@ interface InstallationFacetInterface extends ethers.utils.Interface {
     "itemBalancesOfTokenWithTypes(address,uint256)": FunctionFragment;
     "itemBalancesWithTypes(address)": FunctionFragment;
     "setBaseURI(string)": FunctionFragment;
-    "updateInstallationType((uint16,uint16,uint256,uint256,uint16,uint256[],uint256))": FunctionFragment;
+    "updateInstallationType((uint256,uint256,uint256,uint16,bool,address))": FunctionFragment;
     "uri(uint256)": FunctionFragment;
   };
 
@@ -43,7 +43,6 @@ interface InstallationFacetInterface extends ethers.utils.Interface {
     values: [
       {
         installationType: BigNumberish;
-        level: BigNumberish;
         width: BigNumberish;
         height: BigNumberish;
         alchemicaType: BigNumberish;
@@ -65,8 +64,8 @@ interface InstallationFacetInterface extends ethers.utils.Interface {
     values: [string, BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "claimInstallation",
-    values: [BigNumberish]
+    functionFragment: "claimInstallations",
+    values: [BigNumberish[]]
   ): string;
   encodeFunctionData(
     functionFragment: "craftInstallations",
@@ -101,13 +100,12 @@ interface InstallationFacetInterface extends ethers.utils.Interface {
     functionFragment: "updateInstallationType",
     values: [
       {
+        id: BigNumberish;
+        startBlock: BigNumberish;
         installationType: BigNumberish;
         level: BigNumberish;
-        width: BigNumberish;
-        height: BigNumberish;
-        alchemicaType: BigNumberish;
-        alchemicaCost: BigNumberish[];
-        craftTime: BigNumberish;
+        claimed: boolean;
+        owner: string;
       }
     ]
   ): string;
@@ -127,7 +125,7 @@ interface InstallationFacetInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "claimInstallation",
+    functionFragment: "claimInstallations",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -238,7 +236,6 @@ export class InstallationFacet extends BaseContract {
     addInstallationTypes(
       _installationTypes: {
         installationType: BigNumberish;
-        level: BigNumberish;
         width: BigNumberish;
         height: BigNumberish;
         alchemicaType: BigNumberish;
@@ -267,8 +264,8 @@ export class InstallationFacet extends BaseContract {
       overrides?: CallOverrides
     ): Promise<[BigNumber] & { value: BigNumber }>;
 
-    claimInstallation(
-      _queueId: BigNumberish,
+    claimInstallations(
+      _installationIds: BigNumberish[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
@@ -282,17 +279,8 @@ export class InstallationFacet extends BaseContract {
       overrides?: CallOverrides
     ): Promise<
       [
-        [
-          number,
-          number,
-          BigNumber,
-          BigNumber,
-          number,
-          BigNumber[],
-          BigNumber
-        ] & {
+        [number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
           installationType: number;
-          level: number;
           width: BigNumber;
           height: BigNumber;
           alchemicaType: number;
@@ -302,7 +290,6 @@ export class InstallationFacet extends BaseContract {
       ] & {
         installationType: [
           number,
-          number,
           BigNumber,
           BigNumber,
           number,
@@ -310,7 +297,6 @@ export class InstallationFacet extends BaseContract {
           BigNumber
         ] & {
           installationType: number;
-          level: number;
           width: BigNumber;
           height: BigNumber;
           alchemicaType: number;
@@ -325,17 +311,8 @@ export class InstallationFacet extends BaseContract {
       overrides?: CallOverrides
     ): Promise<
       [
-        ([
-          number,
-          number,
-          BigNumber,
-          BigNumber,
-          number,
-          BigNumber[],
-          BigNumber
-        ] & {
+        ([number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
           installationType: number;
-          level: number;
           width: BigNumber;
           height: BigNumber;
           alchemicaType: number;
@@ -345,7 +322,6 @@ export class InstallationFacet extends BaseContract {
       ] & {
         itemTypes_: ([
           number,
-          number,
           BigNumber,
           BigNumber,
           number,
@@ -353,7 +329,6 @@ export class InstallationFacet extends BaseContract {
           BigNumber
         ] & {
           installationType: number;
-          level: number;
           width: BigNumber;
           height: BigNumber;
           alchemicaType: number;
@@ -401,17 +376,8 @@ export class InstallationFacet extends BaseContract {
         ([
           BigNumber,
           BigNumber,
-          [
-            number,
-            number,
-            BigNumber,
-            BigNumber,
-            number,
-            BigNumber[],
-            BigNumber
-          ] & {
+          [number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
             installationType: number;
-            level: number;
             width: BigNumber;
             height: BigNumber;
             alchemicaType: number;
@@ -423,7 +389,6 @@ export class InstallationFacet extends BaseContract {
           itemId: BigNumber;
           installationType: [
             number,
-            number,
             BigNumber,
             BigNumber,
             number,
@@ -431,7 +396,6 @@ export class InstallationFacet extends BaseContract {
             BigNumber
           ] & {
             installationType: number;
-            level: number;
             width: BigNumber;
             height: BigNumber;
             alchemicaType: number;
@@ -443,17 +407,8 @@ export class InstallationFacet extends BaseContract {
         itemBalancesOfTokenWithTypes_: ([
           BigNumber,
           BigNumber,
-          [
-            number,
-            number,
-            BigNumber,
-            BigNumber,
-            number,
-            BigNumber[],
-            BigNumber
-          ] & {
+          [number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
             installationType: number;
-            level: number;
             width: BigNumber;
             height: BigNumber;
             alchemicaType: number;
@@ -465,7 +420,6 @@ export class InstallationFacet extends BaseContract {
           itemId: BigNumber;
           installationType: [
             number,
-            number,
             BigNumber,
             BigNumber,
             number,
@@ -473,7 +427,6 @@ export class InstallationFacet extends BaseContract {
             BigNumber
           ] & {
             installationType: number;
-            level: number;
             width: BigNumber;
             height: BigNumber;
             alchemicaType: number;
@@ -492,17 +445,8 @@ export class InstallationFacet extends BaseContract {
         ([
           BigNumber,
           BigNumber,
-          [
-            number,
-            number,
-            BigNumber,
-            BigNumber,
-            number,
-            BigNumber[],
-            BigNumber
-          ] & {
+          [number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
             installationType: number;
-            level: number;
             width: BigNumber;
             height: BigNumber;
             alchemicaType: number;
@@ -514,7 +458,6 @@ export class InstallationFacet extends BaseContract {
           itemId: BigNumber;
           installationType: [
             number,
-            number,
             BigNumber,
             BigNumber,
             number,
@@ -522,7 +465,6 @@ export class InstallationFacet extends BaseContract {
             BigNumber
           ] & {
             installationType: number;
-            level: number;
             width: BigNumber;
             height: BigNumber;
             alchemicaType: number;
@@ -534,17 +476,8 @@ export class InstallationFacet extends BaseContract {
         output_: ([
           BigNumber,
           BigNumber,
-          [
-            number,
-            number,
-            BigNumber,
-            BigNumber,
-            number,
-            BigNumber[],
-            BigNumber
-          ] & {
+          [number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
             installationType: number;
-            level: number;
             width: BigNumber;
             height: BigNumber;
             alchemicaType: number;
@@ -556,7 +489,6 @@ export class InstallationFacet extends BaseContract {
           itemId: BigNumber;
           installationType: [
             number,
-            number,
             BigNumber,
             BigNumber,
             number,
@@ -564,7 +496,6 @@ export class InstallationFacet extends BaseContract {
             BigNumber
           ] & {
             installationType: number;
-            level: number;
             width: BigNumber;
             height: BigNumber;
             alchemicaType: number;
@@ -582,13 +513,12 @@ export class InstallationFacet extends BaseContract {
 
     updateInstallationType(
       _updatedInstallation: {
+        id: BigNumberish;
+        startBlock: BigNumberish;
         installationType: BigNumberish;
         level: BigNumberish;
-        width: BigNumberish;
-        height: BigNumberish;
-        alchemicaType: BigNumberish;
-        alchemicaCost: BigNumberish[];
-        craftTime: BigNumberish;
+        claimed: boolean;
+        owner: string;
       },
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
@@ -599,7 +529,6 @@ export class InstallationFacet extends BaseContract {
   addInstallationTypes(
     _installationTypes: {
       installationType: BigNumberish;
-      level: BigNumberish;
       width: BigNumberish;
       height: BigNumberish;
       alchemicaType: BigNumberish;
@@ -628,8 +557,8 @@ export class InstallationFacet extends BaseContract {
     overrides?: CallOverrides
   ): Promise<BigNumber>;
 
-  claimInstallation(
-    _queueId: BigNumberish,
+  claimInstallations(
+    _installationIds: BigNumberish[],
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -642,9 +571,8 @@ export class InstallationFacet extends BaseContract {
     _itemId: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    [number, number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
+    [number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
       installationType: number;
-      level: number;
       width: BigNumber;
       height: BigNumber;
       alchemicaType: number;
@@ -657,9 +585,8 @@ export class InstallationFacet extends BaseContract {
     _itemIds: BigNumberish[],
     overrides?: CallOverrides
   ): Promise<
-    ([number, number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
+    ([number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
       installationType: number;
-      level: number;
       width: BigNumber;
       height: BigNumber;
       alchemicaType: number;
@@ -691,9 +618,8 @@ export class InstallationFacet extends BaseContract {
     ([
       BigNumber,
       BigNumber,
-      [number, number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
+      [number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
         installationType: number;
-        level: number;
         width: BigNumber;
         height: BigNumber;
         alchemicaType: number;
@@ -705,7 +631,6 @@ export class InstallationFacet extends BaseContract {
       itemId: BigNumber;
       installationType: [
         number,
-        number,
         BigNumber,
         BigNumber,
         number,
@@ -713,7 +638,6 @@ export class InstallationFacet extends BaseContract {
         BigNumber
       ] & {
         installationType: number;
-        level: number;
         width: BigNumber;
         height: BigNumber;
         alchemicaType: number;
@@ -730,9 +654,8 @@ export class InstallationFacet extends BaseContract {
     ([
       BigNumber,
       BigNumber,
-      [number, number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
+      [number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
         installationType: number;
-        level: number;
         width: BigNumber;
         height: BigNumber;
         alchemicaType: number;
@@ -744,7 +667,6 @@ export class InstallationFacet extends BaseContract {
       itemId: BigNumber;
       installationType: [
         number,
-        number,
         BigNumber,
         BigNumber,
         number,
@@ -752,7 +674,6 @@ export class InstallationFacet extends BaseContract {
         BigNumber
       ] & {
         installationType: number;
-        level: number;
         width: BigNumber;
         height: BigNumber;
         alchemicaType: number;
@@ -769,13 +690,12 @@ export class InstallationFacet extends BaseContract {
 
   updateInstallationType(
     _updatedInstallation: {
+      id: BigNumberish;
+      startBlock: BigNumberish;
       installationType: BigNumberish;
       level: BigNumberish;
-      width: BigNumberish;
-      height: BigNumberish;
-      alchemicaType: BigNumberish;
-      alchemicaCost: BigNumberish[];
-      craftTime: BigNumberish;
+      claimed: boolean;
+      owner: string;
     },
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
@@ -786,7 +706,6 @@ export class InstallationFacet extends BaseContract {
     addInstallationTypes(
       _installationTypes: {
         installationType: BigNumberish;
-        level: BigNumberish;
         width: BigNumberish;
         height: BigNumberish;
         alchemicaType: BigNumberish;
@@ -815,8 +734,8 @@ export class InstallationFacet extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    claimInstallation(
-      _queueId: BigNumberish,
+    claimInstallations(
+      _installationIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<void>;
 
@@ -829,9 +748,8 @@ export class InstallationFacet extends BaseContract {
       _itemId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      [number, number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
+      [number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
         installationType: number;
-        level: number;
         width: BigNumber;
         height: BigNumber;
         alchemicaType: number;
@@ -844,17 +762,8 @@ export class InstallationFacet extends BaseContract {
       _itemIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<
-      ([
-        number,
-        number,
-        BigNumber,
-        BigNumber,
-        number,
-        BigNumber[],
-        BigNumber
-      ] & {
+      ([number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
         installationType: number;
-        level: number;
         width: BigNumber;
         height: BigNumber;
         alchemicaType: number;
@@ -886,17 +795,8 @@ export class InstallationFacet extends BaseContract {
       ([
         BigNumber,
         BigNumber,
-        [
-          number,
-          number,
-          BigNumber,
-          BigNumber,
-          number,
-          BigNumber[],
-          BigNumber
-        ] & {
+        [number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
           installationType: number;
-          level: number;
           width: BigNumber;
           height: BigNumber;
           alchemicaType: number;
@@ -908,7 +808,6 @@ export class InstallationFacet extends BaseContract {
         itemId: BigNumber;
         installationType: [
           number,
-          number,
           BigNumber,
           BigNumber,
           number,
@@ -916,7 +815,6 @@ export class InstallationFacet extends BaseContract {
           BigNumber
         ] & {
           installationType: number;
-          level: number;
           width: BigNumber;
           height: BigNumber;
           alchemicaType: number;
@@ -933,17 +831,8 @@ export class InstallationFacet extends BaseContract {
       ([
         BigNumber,
         BigNumber,
-        [
-          number,
-          number,
-          BigNumber,
-          BigNumber,
-          number,
-          BigNumber[],
-          BigNumber
-        ] & {
+        [number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
           installationType: number;
-          level: number;
           width: BigNumber;
           height: BigNumber;
           alchemicaType: number;
@@ -955,7 +844,6 @@ export class InstallationFacet extends BaseContract {
         itemId: BigNumber;
         installationType: [
           number,
-          number,
           BigNumber,
           BigNumber,
           number,
@@ -963,7 +851,6 @@ export class InstallationFacet extends BaseContract {
           BigNumber
         ] & {
           installationType: number;
-          level: number;
           width: BigNumber;
           height: BigNumber;
           alchemicaType: number;
@@ -977,13 +864,12 @@ export class InstallationFacet extends BaseContract {
 
     updateInstallationType(
       _updatedInstallation: {
+        id: BigNumberish;
+        startBlock: BigNumberish;
         installationType: BigNumberish;
         level: BigNumberish;
-        width: BigNumberish;
-        height: BigNumberish;
-        alchemicaType: BigNumberish;
-        alchemicaCost: BigNumberish[];
-        craftTime: BigNumberish;
+        claimed: boolean;
+        owner: string;
       },
       overrides?: CallOverrides
     ): Promise<void>;
@@ -1045,7 +931,6 @@ export class InstallationFacet extends BaseContract {
     addInstallationTypes(
       _installationTypes: {
         installationType: BigNumberish;
-        level: BigNumberish;
         width: BigNumberish;
         height: BigNumberish;
         alchemicaType: BigNumberish;
@@ -1074,8 +959,8 @@ export class InstallationFacet extends BaseContract {
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    claimInstallation(
-      _queueId: BigNumberish,
+    claimInstallations(
+      _installationIds: BigNumberish[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1123,13 +1008,12 @@ export class InstallationFacet extends BaseContract {
 
     updateInstallationType(
       _updatedInstallation: {
+        id: BigNumberish;
+        startBlock: BigNumberish;
         installationType: BigNumberish;
         level: BigNumberish;
-        width: BigNumberish;
-        height: BigNumberish;
-        alchemicaType: BigNumberish;
-        alchemicaCost: BigNumberish[];
-        craftTime: BigNumberish;
+        claimed: boolean;
+        owner: string;
       },
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
@@ -1141,7 +1025,6 @@ export class InstallationFacet extends BaseContract {
     addInstallationTypes(
       _installationTypes: {
         installationType: BigNumberish;
-        level: BigNumberish;
         width: BigNumberish;
         height: BigNumberish;
         alchemicaType: BigNumberish;
@@ -1170,8 +1053,8 @@ export class InstallationFacet extends BaseContract {
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    claimInstallation(
-      _queueId: BigNumberish,
+    claimInstallations(
+      _installationIds: BigNumberish[],
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 
@@ -1219,13 +1102,12 @@ export class InstallationFacet extends BaseContract {
 
     updateInstallationType(
       _updatedInstallation: {
+        id: BigNumberish;
+        startBlock: BigNumberish;
         installationType: BigNumberish;
         level: BigNumberish;
-        width: BigNumberish;
-        height: BigNumberish;
-        alchemicaType: BigNumberish;
-        alchemicaCost: BigNumberish[];
-        craftTime: BigNumberish;
+        claimed: boolean;
+        owner: string;
       },
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;

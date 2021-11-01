@@ -2,9 +2,8 @@
 pragma solidity 0.8.9;
 import {LibDiamond} from "./LibDiamond.sol";
 
-struct Installation {
+struct InstallationType {
   uint16 installationType; //0 = harvester, 1 = reservoir, 2 = altar, 3 = gotchi lodge
-  uint16 level;
   uint256 width;
   uint256 height;
   uint16 alchemicaType;
@@ -25,21 +24,28 @@ struct Reservoir {
   uint256 spillPercentage;
 }
 
-struct InstallationQueue {
-  address owner;
+struct Installation {
+  uint256 id;
   uint256 startBlock;
   uint256 installationType;
+  uint16 level;
+  bool claimed;
+  address owner;
 }
 
 struct AppStorage {
   address installationContract;
   address[] alchemicaAddresses;
   string baseUri;
-  Installation[] installationTypes;
-  // user => queueId => InstallationQueue
-  mapping(address => mapping(uint256 => InstallationQueue)) installationQueue;
-  // user => nextQueueId
-  mapping(address => uint256) queuesIds;
+  InstallationType[] installationTypes;
+  // owner => installationId => Installation
+  mapping(address => mapping(uint256 => Installation)) installations;
+  uint256 nextInstallationId;
+  //ERC1155 vars
+  mapping(uint256 => mapping(address => uint256)) balances;
+  mapping(address => mapping(address => bool)) operatorApprovals;
+  // installationType => installationId
+  mapping(uint256 => uint256) installationsIds;
   //ERC998 vars
   mapping(address => mapping(uint256 => mapping(uint256 => uint256))) nftItemBalances;
   mapping(address => mapping(uint256 => uint256[])) nftItems;

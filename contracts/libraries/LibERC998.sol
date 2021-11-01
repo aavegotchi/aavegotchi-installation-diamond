@@ -1,13 +1,13 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
-import {LibAppStorage, AppStorage, Installation} from "./AppStorage.sol";
+import {LibAppStorage, AppStorage, InstallationType} from "./AppStorage.sol";
 import {LibERC1155} from "./LibERC1155.sol";
 
 struct ItemTypeIO {
   uint256 balance;
   uint256 itemId;
-  Installation installationType;
+  InstallationType installationType;
 }
 
 library ERC998 {

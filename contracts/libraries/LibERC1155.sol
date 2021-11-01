@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
+import {LibAppStorage, AppStorage} from "./AppStorage.sol";
 import {IERC1155TokenReceiver} from "../interfaces/IERC1155TokenReceiver.sol";
 
 library LibERC1155 {
@@ -43,6 +44,10 @@ library LibERC1155 {
         The URI MUST point to a JSON file that conforms to the "ERC-1155 Metadata URI JSON Schema".
     */
   event URI(string _value, uint256 indexed _id);
+
+  // function _safeMint() internal {
+  //   AppStorage storage s = LibAppStorage.diamondStorage();
+  // }
 
   function onERC1155Received(
     address _operator,

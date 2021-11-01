@@ -1,8 +1,7 @@
 import { BigNumberish } from "@ethersproject/bignumber";
 
-export interface Installation {
+export interface InstallationType {
   installationType: BigNumberish;
-  level: BigNumberish;
   width: BigNumberish;
   height: BigNumberish;
   alchemicaType: BigNumberish;

@@ -2,7 +2,7 @@
 pragma solidity 0.8.9;
 
 import {ERC998, ItemTypeIO} from "../libraries/LibERC998.sol";
-import {LibAppStorage, Installation, InstallationQueue, Modifiers} from "../libraries/AppStorage.sol";
+import {LibAppStorage, InstallationType, Installation, Modifiers} from "../libraries/AppStorage.sol";
 import {LibStrings} from "../libraries/LibStrings.sol";
 import {LibMeta} from "../libraries/LibMeta.sol";
 import {LibERC1155} from "../libraries/LibERC1155.sol";
@@ -129,24 +129,24 @@ contract InstallationFacet is Modifiers {
 
 */
 
-  ///@notice Query the item type of a particular item
-  ///@param _itemId Item to query
+  ///@notice Query the item type of a particular installation
+  ///@param _installationTypeId Item to query
   ///@return installationType A struct containing details about the item type of an item with identifier `_itemId`
-  function getInstallationType(uint256 _itemId) external view returns (Installation memory installationType) {
-    require(_itemId < s.installationTypes.length, "InstallationFacet: Item type doesn't exist");
-    installationType = s.installationTypes[_itemId];
+  function getInstallationType(uint256 _installationTypeId) external view returns (InstallationType memory installationType) {
+    require(_installationTypeId < s.installationTypes.length, "InstallationFacet: Item type doesn't exist");
+    installationType = s.installationTypes[_installationTypeId];
   }
 
-  ///@notice Query the item type of multiple  items
-  ///@param _itemIds An array containing the identifiers of items to query
+  ///@notice Query the item type of multiple installation types
+  ///@param _installationTypeIds An array containing the identifiers of items to query
   ///@return itemTypes_ An array of structs,each struct containing details about the item type of the corresponding item
-  function getInstallationTypes(uint256[] calldata _itemIds) external view returns (Installation[] memory itemTypes_) {
-    if (_itemIds.length == 0) {
+  function getInstallationTypes(uint256[] calldata _installationTypeIds) external view returns (InstallationType[] memory itemTypes_) {
+    if (_installationTypeIds.length == 0) {
       itemTypes_ = s.installationTypes;
     } else {
-      itemTypes_ = new Installation[](_itemIds.length);
-      for (uint256 i; i < _itemIds.length; i++) {
-        itemTypes_[i] = s.installationTypes[_itemIds[i]];
+      itemTypes_ = new InstallationType[](_installationTypeIds.length);
+      for (uint256 i; i < _installationTypeIds.length; i++) {
+        itemTypes_[i] = s.installationTypes[_installationTypeIds[i]];
       }
     }
   }
@@ -182,31 +182,35 @@ contract InstallationFacet is Modifiers {
         LibERC20.transferFrom(s.alchemicaAddresses[j], msg.sender, address(this), s.installationTypes[i].alchemicaCost[j]);
       }
       //put the installation into a queue
-      s.installationQueue[msg.sender][s.queuesIds[msg.sender]] = InstallationQueue(msg.sender, block.number, i);
       //each wearable needs a unique queue id
-      s.queuesIds[msg.sender]++;
+      s.installations[msg.sender][s.nextInstallationId] = Installation(s.nextInstallationId, block.number, i, 1, false, msg.sender);
+      s.nextInstallationId++;
     }
     //after queue is over, user can claim installation
   }
 
-  function claimInstallation(uint256 _queueId) external {
-    require(msg.sender == s.installationQueue[msg.sender][_queueId].owner);
-    uint256 readyBlock = s.installationQueue[msg.sender][_queueId].startBlock +
-      s.installationTypes[s.installationQueue[msg.sender][_queueId].installationType].craftTime;
-    require(block.timestamp >= readyBlock, "InstallationFacet: installation not ready");
-    // mint installation
+  function claimInstallations(uint256[] calldata _installationIds) external {
+    for (uint8 i; i < _installationIds.length; i++) {
+      require(msg.sender == s.installations[msg.sender][_installationIds[i]].owner, "InstallationFacet: not owner");
+      require(!s.installations[msg.sender][_installationIds[i]].claimed, "InstallationFacet: already claimed");
+      uint256 readyBlock = s.installations[msg.sender][_installationIds[i]].startBlock +
+        s.installationTypes[s.installations[msg.sender][_installationIds[i]].installationType].craftTime;
+      require(block.timestamp >= readyBlock, "InstallationFacet: installation not ready");
+      // mint installation
+
+      s.installations[msg.sender][_installationIds[i]].claimed = true;
+    }
   }
 
   /***********************************|
    |             Owner Functions        |
    |__________________________________*/
 
-  function addInstallationTypes(Installation[] calldata _installationTypes) external onlyOwner {
+  function addInstallationTypes(InstallationType[] calldata _installationTypes) external onlyOwner {
     for (uint16 i = 0; i < _installationTypes.length; i++) {
       s.installationTypes.push(
-        Installation(
+        InstallationType(
           _installationTypes[i].installationType,
-          _installationTypes[i].level,
           _installationTypes[i].width,
           _installationTypes[i].height,
           _installationTypes[i].alchemicaType,
@@ -217,5 +221,5 @@ contract InstallationFacet is Modifiers {
     }
   }
 
-  function updateInstallationType(Installation memory _updatedInstallation) external onlyOwner {}
+  // function updateInstallationType(Installation memory _updatedInstallation) external onlyOwner {}
 }
