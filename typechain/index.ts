@@ -4,6 +4,7 @@
 export type { Diamond } from "./Diamond";
 export type { DiamondCutFacet } from "./DiamondCutFacet";
 export type { DiamondLoupeFacet } from "./DiamondLoupeFacet";
+export type { ERC1155Facet } from "./ERC1155Facet";
 export type { InstallationFacet } from "./InstallationFacet";
 export type { OwnershipFacet } from "./OwnershipFacet";
 export type { IDiamondCut } from "./IDiamondCut";
@@ -28,6 +29,7 @@ export type { DiamondInit } from "./DiamondInit";
 export { Diamond__factory } from "./factories/Diamond__factory";
 export { DiamondCutFacet__factory } from "./factories/DiamondCutFacet__factory";
 export { DiamondLoupeFacet__factory } from "./factories/DiamondLoupeFacet__factory";
+export { ERC1155Facet__factory } from "./factories/ERC1155Facet__factory";
 export { InstallationFacet__factory } from "./factories/InstallationFacet__factory";
 export { OwnershipFacet__factory } from "./factories/OwnershipFacet__factory";
 export { IDiamondCut__factory } from "./factories/IDiamondCut__factory";

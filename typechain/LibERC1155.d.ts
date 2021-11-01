@@ -22,6 +22,7 @@ interface LibERC1155Interface extends ethers.utils.Interface {
 
   events: {
     "ApprovalForAll(address,address,bool)": EventFragment;
+    "MintInstallation(address,uint256,uint256)": EventFragment;
     "TransferBatch(address,address,address,uint256[],uint256[])": EventFragment;
     "TransferFromParent(address,uint256,uint256,uint256)": EventFragment;
     "TransferSingle(address,address,address,uint256,uint256)": EventFragment;
@@ -30,6 +31,7 @@ interface LibERC1155Interface extends ethers.utils.Interface {
   };
 
   getEvent(nameOrSignatureOrTopic: "ApprovalForAll"): EventFragment;
+  getEvent(nameOrSignatureOrTopic: "MintInstallation"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TransferBatch"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TransferFromParent"): EventFragment;
   getEvent(nameOrSignatureOrTopic: "TransferSingle"): EventFragment;
@@ -42,6 +44,14 @@ export type ApprovalForAllEvent = TypedEvent<
     _owner: string;
     _operator: string;
     _approved: boolean;
+  }
+>;
+
+export type MintInstallationEvent = TypedEvent<
+  [string, BigNumber, BigNumber] & {
+    _owner: string;
+    _installationType: BigNumber;
+    _installationId: BigNumber;
   }
 >;
 
@@ -84,7 +94,7 @@ export type TransferToParentEvent = TypedEvent<
 >;
 
 export type URIEvent = TypedEvent<
-  [string, BigNumber] & { _value: string; _id: BigNumber }
+  [string, BigNumber] & { _value: string; _tokenId: BigNumber }
 >;
 
 export class LibERC1155 extends BaseContract {
@@ -151,6 +161,32 @@ export class LibERC1155 extends BaseContract {
     ): TypedEventFilter<
       [string, string, boolean],
       { _owner: string; _operator: string; _approved: boolean }
+    >;
+
+    "MintInstallation(address,uint256,uint256)"(
+      _owner?: string | null,
+      _installationType?: BigNumberish | null,
+      _installationId?: null
+    ): TypedEventFilter<
+      [string, BigNumber, BigNumber],
+      {
+        _owner: string;
+        _installationType: BigNumber;
+        _installationId: BigNumber;
+      }
+    >;
+
+    MintInstallation(
+      _owner?: string | null,
+      _installationType?: BigNumberish | null,
+      _installationId?: null
+    ): TypedEventFilter<
+      [string, BigNumber, BigNumber],
+      {
+        _owner: string;
+        _installationType: BigNumber;
+        _installationId: BigNumber;
+      }
     >;
 
     "TransferBatch(address,address,address,uint256[],uint256[])"(
@@ -283,18 +319,18 @@ export class LibERC1155 extends BaseContract {
 
     "URI(string,uint256)"(
       _value?: null,
-      _id?: BigNumberish | null
+      _tokenId?: BigNumberish | null
     ): TypedEventFilter<
       [string, BigNumber],
-      { _value: string; _id: BigNumber }
+      { _value: string; _tokenId: BigNumber }
     >;
 
     URI(
       _value?: null,
-      _id?: BigNumberish | null
+      _tokenId?: BigNumberish | null
     ): TypedEventFilter<
       [string, BigNumber],
-      { _value: string; _id: BigNumber }
+      { _value: string; _tokenId: BigNumber }
     >;
   };
 

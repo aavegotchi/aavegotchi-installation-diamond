@@ -29,12 +29,11 @@ interface InstallationFacetInterface extends ethers.utils.Interface {
     "craftInstallations(uint256[])": FunctionFragment;
     "getInstallationType(uint256)": FunctionFragment;
     "getInstallationTypes(uint256[])": FunctionFragment;
-    "itemBalances(address)": FunctionFragment;
-    "itemBalancesOfToken(address,uint256)": FunctionFragment;
-    "itemBalancesOfTokenWithTypes(address,uint256)": FunctionFragment;
-    "itemBalancesWithTypes(address)": FunctionFragment;
+    "installationBalancesOfToken(address,uint256)": FunctionFragment;
+    "installationBalancesOfTokenWithTypes(address,uint256)": FunctionFragment;
+    "installationsBalances(address)": FunctionFragment;
+    "installationsBalancesWithTypes(address)": FunctionFragment;
     "setBaseURI(string)": FunctionFragment;
-    "updateInstallationType((uint256,uint256,uint256,uint16,bool,address))": FunctionFragment;
     "uri(uint256)": FunctionFragment;
   };
 
@@ -80,35 +79,22 @@ interface InstallationFacetInterface extends ethers.utils.Interface {
     values: [BigNumberish[]]
   ): string;
   encodeFunctionData(
-    functionFragment: "itemBalances",
+    functionFragment: "installationBalancesOfToken",
+    values: [string, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "installationBalancesOfTokenWithTypes",
+    values: [string, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "installationsBalances",
     values: [string]
   ): string;
   encodeFunctionData(
-    functionFragment: "itemBalancesOfToken",
-    values: [string, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "itemBalancesOfTokenWithTypes",
-    values: [string, BigNumberish]
-  ): string;
-  encodeFunctionData(
-    functionFragment: "itemBalancesWithTypes",
+    functionFragment: "installationsBalancesWithTypes",
     values: [string]
   ): string;
   encodeFunctionData(functionFragment: "setBaseURI", values: [string]): string;
-  encodeFunctionData(
-    functionFragment: "updateInstallationType",
-    values: [
-      {
-        id: BigNumberish;
-        startBlock: BigNumberish;
-        installationType: BigNumberish;
-        level: BigNumberish;
-        claimed: boolean;
-        owner: string;
-      }
-    ]
-  ): string;
   encodeFunctionData(functionFragment: "uri", values: [BigNumberish]): string;
 
   decodeFunctionResult(
@@ -141,35 +127,29 @@ interface InstallationFacetInterface extends ethers.utils.Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "itemBalances",
+    functionFragment: "installationBalancesOfToken",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "itemBalancesOfToken",
+    functionFragment: "installationBalancesOfTokenWithTypes",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "itemBalancesOfTokenWithTypes",
+    functionFragment: "installationsBalances",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "itemBalancesWithTypes",
+    functionFragment: "installationsBalancesWithTypes",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "setBaseURI", data: BytesLike): Result;
-  decodeFunctionResult(
-    functionFragment: "updateInstallationType",
-    data: BytesLike
-  ): Result;
   decodeFunctionResult(functionFragment: "uri", data: BytesLike): Result;
 
   events: {
     "TransferToParent(address,uint256,uint256,uint256)": EventFragment;
-    "UseConsumables(uint256,uint256[],uint256[])": EventFragment;
   };
 
   getEvent(nameOrSignatureOrTopic: "TransferToParent"): EventFragment;
-  getEvent(nameOrSignatureOrTopic: "UseConsumables"): EventFragment;
 }
 
 export type TransferToParentEvent = TypedEvent<
@@ -178,14 +158,6 @@ export type TransferToParentEvent = TypedEvent<
     _toTokenId: BigNumber;
     _tokenTypeId: BigNumber;
     _value: BigNumber;
-  }
->;
-
-export type UseConsumablesEvent = TypedEvent<
-  [BigNumber, BigNumber[], BigNumber[]] & {
-    _tokenId: BigNumber;
-    _itemIds: BigNumber[];
-    _quantities: BigNumber[];
   }
 >;
 
@@ -275,7 +247,7 @@ export class InstallationFacet extends BaseContract {
     ): Promise<ContractTransaction>;
 
     getInstallationType(
-      _itemId: BigNumberish,
+      _installationTypeId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
       [
@@ -307,7 +279,7 @@ export class InstallationFacet extends BaseContract {
     >;
 
     getInstallationTypes(
-      _itemIds: BigNumberish[],
+      _installationTypeIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<
       [
@@ -320,7 +292,7 @@ export class InstallationFacet extends BaseContract {
           craftTime: BigNumber;
         })[]
       ] & {
-        itemTypes_: ([
+        installationTypes_: ([
           number,
           BigNumber,
           BigNumber,
@@ -338,36 +310,25 @@ export class InstallationFacet extends BaseContract {
       }
     >;
 
-    itemBalances(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<
-      [
-        ([BigNumber, BigNumber] & { itemId: BigNumber; balance: BigNumber })[]
-      ] & {
-        bals_: ([BigNumber, BigNumber] & {
-          itemId: BigNumber;
-          balance: BigNumber;
-        })[];
-      }
-    >;
-
-    itemBalancesOfToken(
+    installationBalancesOfToken(
       _tokenContract: string,
       _tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
       [
-        ([BigNumber, BigNumber] & { itemId: BigNumber; balance: BigNumber })[]
+        ([BigNumber, BigNumber] & {
+          installationId: BigNumber;
+          balance: BigNumber;
+        })[]
       ] & {
         bals_: ([BigNumber, BigNumber] & {
-          itemId: BigNumber;
+          installationId: BigNumber;
           balance: BigNumber;
         })[];
       }
     >;
 
-    itemBalancesOfTokenWithTypes(
+    installationBalancesOfTokenWithTypes(
       _tokenContract: string,
       _tokenId: BigNumberish,
       overrides?: CallOverrides
@@ -404,7 +365,7 @@ export class InstallationFacet extends BaseContract {
           };
         })[]
       ] & {
-        itemBalancesOfTokenWithTypes_: ([
+        installationBalancesOfTokenWithTypes_: ([
           BigNumber,
           BigNumber,
           [number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
@@ -437,7 +398,24 @@ export class InstallationFacet extends BaseContract {
       }
     >;
 
-    itemBalancesWithTypes(
+    installationsBalances(
+      _account: string,
+      overrides?: CallOverrides
+    ): Promise<
+      [
+        ([BigNumber, BigNumber] & {
+          installationId: BigNumber;
+          balance: BigNumber;
+        })[]
+      ] & {
+        bals_: ([BigNumber, BigNumber] & {
+          installationId: BigNumber;
+          balance: BigNumber;
+        })[];
+      }
+    >;
+
+    installationsBalancesWithTypes(
       _owner: string,
       overrides?: CallOverrides
     ): Promise<
@@ -511,18 +489,6 @@ export class InstallationFacet extends BaseContract {
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
 
-    updateInstallationType(
-      _updatedInstallation: {
-        id: BigNumberish;
-        startBlock: BigNumberish;
-        installationType: BigNumberish;
-        level: BigNumberish;
-        claimed: boolean;
-        owner: string;
-      },
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<ContractTransaction>;
-
     uri(_id: BigNumberish, overrides?: CallOverrides): Promise<[string]>;
   };
 
@@ -568,7 +534,7 @@ export class InstallationFacet extends BaseContract {
   ): Promise<ContractTransaction>;
 
   getInstallationType(
-    _itemId: BigNumberish,
+    _installationTypeId: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
     [number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
@@ -582,7 +548,7 @@ export class InstallationFacet extends BaseContract {
   >;
 
   getInstallationTypes(
-    _itemIds: BigNumberish[],
+    _installationTypeIds: BigNumberish[],
     overrides?: CallOverrides
   ): Promise<
     ([number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
@@ -595,22 +561,18 @@ export class InstallationFacet extends BaseContract {
     })[]
   >;
 
-  itemBalances(
-    _account: string,
-    overrides?: CallOverrides
-  ): Promise<
-    ([BigNumber, BigNumber] & { itemId: BigNumber; balance: BigNumber })[]
-  >;
-
-  itemBalancesOfToken(
+  installationBalancesOfToken(
     _tokenContract: string,
     _tokenId: BigNumberish,
     overrides?: CallOverrides
   ): Promise<
-    ([BigNumber, BigNumber] & { itemId: BigNumber; balance: BigNumber })[]
+    ([BigNumber, BigNumber] & {
+      installationId: BigNumber;
+      balance: BigNumber;
+    })[]
   >;
 
-  itemBalancesOfTokenWithTypes(
+  installationBalancesOfTokenWithTypes(
     _tokenContract: string,
     _tokenId: BigNumberish,
     overrides?: CallOverrides
@@ -647,7 +609,17 @@ export class InstallationFacet extends BaseContract {
     })[]
   >;
 
-  itemBalancesWithTypes(
+  installationsBalances(
+    _account: string,
+    overrides?: CallOverrides
+  ): Promise<
+    ([BigNumber, BigNumber] & {
+      installationId: BigNumber;
+      balance: BigNumber;
+    })[]
+  >;
+
+  installationsBalancesWithTypes(
     _owner: string,
     overrides?: CallOverrides
   ): Promise<
@@ -685,18 +657,6 @@ export class InstallationFacet extends BaseContract {
 
   setBaseURI(
     _value: string,
-    overrides?: Overrides & { from?: string | Promise<string> }
-  ): Promise<ContractTransaction>;
-
-  updateInstallationType(
-    _updatedInstallation: {
-      id: BigNumberish;
-      startBlock: BigNumberish;
-      installationType: BigNumberish;
-      level: BigNumberish;
-      claimed: boolean;
-      owner: string;
-    },
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
@@ -745,7 +705,7 @@ export class InstallationFacet extends BaseContract {
     ): Promise<void>;
 
     getInstallationType(
-      _itemId: BigNumberish,
+      _installationTypeId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
       [number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
@@ -759,7 +719,7 @@ export class InstallationFacet extends BaseContract {
     >;
 
     getInstallationTypes(
-      _itemIds: BigNumberish[],
+      _installationTypeIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<
       ([number, BigNumber, BigNumber, number, BigNumber[], BigNumber] & {
@@ -772,22 +732,18 @@ export class InstallationFacet extends BaseContract {
       })[]
     >;
 
-    itemBalances(
-      _account: string,
-      overrides?: CallOverrides
-    ): Promise<
-      ([BigNumber, BigNumber] & { itemId: BigNumber; balance: BigNumber })[]
-    >;
-
-    itemBalancesOfToken(
+    installationBalancesOfToken(
       _tokenContract: string,
       _tokenId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<
-      ([BigNumber, BigNumber] & { itemId: BigNumber; balance: BigNumber })[]
+      ([BigNumber, BigNumber] & {
+        installationId: BigNumber;
+        balance: BigNumber;
+      })[]
     >;
 
-    itemBalancesOfTokenWithTypes(
+    installationBalancesOfTokenWithTypes(
       _tokenContract: string,
       _tokenId: BigNumberish,
       overrides?: CallOverrides
@@ -824,7 +780,17 @@ export class InstallationFacet extends BaseContract {
       })[]
     >;
 
-    itemBalancesWithTypes(
+    installationsBalances(
+      _account: string,
+      overrides?: CallOverrides
+    ): Promise<
+      ([BigNumber, BigNumber] & {
+        installationId: BigNumber;
+        balance: BigNumber;
+      })[]
+    >;
+
+    installationsBalancesWithTypes(
       _owner: string,
       overrides?: CallOverrides
     ): Promise<
@@ -862,18 +828,6 @@ export class InstallationFacet extends BaseContract {
 
     setBaseURI(_value: string, overrides?: CallOverrides): Promise<void>;
 
-    updateInstallationType(
-      _updatedInstallation: {
-        id: BigNumberish;
-        startBlock: BigNumberish;
-        installationType: BigNumberish;
-        level: BigNumberish;
-        claimed: boolean;
-        owner: string;
-      },
-      overrides?: CallOverrides
-    ): Promise<void>;
-
     uri(_id: BigNumberish, overrides?: CallOverrides): Promise<string>;
   };
 
@@ -906,24 +860,6 @@ export class InstallationFacet extends BaseContract {
         _tokenTypeId: BigNumber;
         _value: BigNumber;
       }
-    >;
-
-    "UseConsumables(uint256,uint256[],uint256[])"(
-      _tokenId?: BigNumberish | null,
-      _itemIds?: null,
-      _quantities?: null
-    ): TypedEventFilter<
-      [BigNumber, BigNumber[], BigNumber[]],
-      { _tokenId: BigNumber; _itemIds: BigNumber[]; _quantities: BigNumber[] }
-    >;
-
-    UseConsumables(
-      _tokenId?: BigNumberish | null,
-      _itemIds?: null,
-      _quantities?: null
-    ): TypedEventFilter<
-      [BigNumber, BigNumber[], BigNumber[]],
-      { _tokenId: BigNumber; _itemIds: BigNumber[]; _quantities: BigNumber[] }
     >;
   };
 
@@ -970,51 +906,39 @@ export class InstallationFacet extends BaseContract {
     ): Promise<BigNumber>;
 
     getInstallationType(
-      _itemId: BigNumberish,
+      _installationTypeId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     getInstallationTypes(
-      _itemIds: BigNumberish[],
+      _installationTypeIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    itemBalances(
+    installationBalancesOfToken(
+      _tokenContract: string,
+      _tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    installationBalancesOfTokenWithTypes(
+      _tokenContract: string,
+      _tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<BigNumber>;
+
+    installationsBalances(
       _account: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
-    itemBalancesOfToken(
-      _tokenContract: string,
-      _tokenId: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    itemBalancesOfTokenWithTypes(
-      _tokenContract: string,
-      _tokenId: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<BigNumber>;
-
-    itemBalancesWithTypes(
+    installationsBalancesWithTypes(
       _owner: string,
       overrides?: CallOverrides
     ): Promise<BigNumber>;
 
     setBaseURI(
       _value: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<BigNumber>;
-
-    updateInstallationType(
-      _updatedInstallation: {
-        id: BigNumberish;
-        startBlock: BigNumberish;
-        installationType: BigNumberish;
-        level: BigNumberish;
-        claimed: boolean;
-        owner: string;
-      },
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
 
@@ -1064,51 +988,39 @@ export class InstallationFacet extends BaseContract {
     ): Promise<PopulatedTransaction>;
 
     getInstallationType(
-      _itemId: BigNumberish,
+      _installationTypeId: BigNumberish,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     getInstallationTypes(
-      _itemIds: BigNumberish[],
+      _installationTypeIds: BigNumberish[],
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    itemBalances(
+    installationBalancesOfToken(
+      _tokenContract: string,
+      _tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    installationBalancesOfTokenWithTypes(
+      _tokenContract: string,
+      _tokenId: BigNumberish,
+      overrides?: CallOverrides
+    ): Promise<PopulatedTransaction>;
+
+    installationsBalances(
       _account: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
-    itemBalancesOfToken(
-      _tokenContract: string,
-      _tokenId: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    itemBalancesOfTokenWithTypes(
-      _tokenContract: string,
-      _tokenId: BigNumberish,
-      overrides?: CallOverrides
-    ): Promise<PopulatedTransaction>;
-
-    itemBalancesWithTypes(
+    installationsBalancesWithTypes(
       _owner: string,
       overrides?: CallOverrides
     ): Promise<PopulatedTransaction>;
 
     setBaseURI(
       _value: string,
-      overrides?: Overrides & { from?: string | Promise<string> }
-    ): Promise<PopulatedTransaction>;
-
-    updateInstallationType(
-      _updatedInstallation: {
-        id: BigNumberish;
-        startBlock: BigNumberish;
-        installationType: BigNumberish;
-        level: BigNumberish;
-        claimed: boolean;
-        owner: string;
-      },
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
 

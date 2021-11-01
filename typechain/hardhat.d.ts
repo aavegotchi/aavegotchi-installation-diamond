@@ -25,6 +25,10 @@ declare module "hardhat/types/runtime" {
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.DiamondLoupeFacet__factory>;
     getContractFactory(
+      name: "ERC1155Facet",
+      signerOrOptions?: ethers.Signer | FactoryOptions
+    ): Promise<Contracts.ERC1155Facet__factory>;
+    getContractFactory(
       name: "InstallationFacet",
       signerOrOptions?: ethers.Signer | FactoryOptions
     ): Promise<Contracts.InstallationFacet__factory>;
@@ -120,6 +124,11 @@ declare module "hardhat/types/runtime" {
       address: string,
       signer?: ethers.Signer
     ): Promise<Contracts.DiamondLoupeFacet>;
+    getContractAt(
+      name: "ERC1155Facet",
+      address: string,
+      signer?: ethers.Signer
+    ): Promise<Contracts.ERC1155Facet>;
     getContractAt(
       name: "InstallationFacet",
       address: string,

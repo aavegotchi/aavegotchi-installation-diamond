@@ -43,11 +43,42 @@ library LibERC1155 {
         URIs are defined in RFC 3986.
         The URI MUST point to a JSON file that conforms to the "ERC-1155 Metadata URI JSON Schema".
     */
-  event URI(string _value, uint256 indexed _id);
+  event URI(string _value, uint256 indexed _tokenId);
 
-  // function _safeMint() internal {
-  //   AppStorage storage s = LibAppStorage.diamondStorage();
-  // }
+  event MintInstallation(address indexed _owner, uint256 indexed _installationType, uint256 _installationId);
+
+  function _transferFrom(
+    address from,
+    address _to,
+    uint256 _id,
+    uint256 _amount,
+    bytes memory _data
+  ) internal {}
+
+  function _batchTransferFrom(
+    address from,
+    address _to,
+    uint256[] memory _ids,
+    uint256[] memory _amounts,
+    bytes memory _data
+  ) internal {}
+
+  function _safeMint(
+    address _to,
+    uint256 _installationType,
+    uint256 _installationId
+  ) internal {
+    AppStorage storage s = LibAppStorage.diamondStorage();
+
+    require(!s.installations[_to][_installationId].claimed, "LibERC721: tokenId already minted");
+    require(s.installations[_to][_installationId].owner == _to, "LibERC721: wrong owner");
+    s.ownerInstallations[_to].push(_installationId);
+    s.ownerInstallationBalances[_to][_installationType]++;
+    s.installations[_to][_installationId].claimed = true;
+
+    emit MintInstallation(_to, _installationType, _installationId);
+    emit LibERC1155.TransferSingle(address(this), address(0), _to, _installationType, 1);
+  }
 
   function onERC1155Received(
     address _operator,

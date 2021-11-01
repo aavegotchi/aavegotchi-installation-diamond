@@ -17,11 +17,11 @@ library ERC998 {
     returns (ItemTypeIO[] memory itemBalancesOfTokenWithTypes_)
   {
     AppStorage storage s = LibAppStorage.diamondStorage();
-    uint256 count = s.nftItems[_tokenContract][_tokenId].length;
+    uint256 count = s.nftInstallations[_tokenContract][_tokenId].length;
     itemBalancesOfTokenWithTypes_ = new ItemTypeIO[](count);
     for (uint256 i; i < count; i++) {
-      uint256 itemId = s.nftItems[_tokenContract][_tokenId][i];
-      uint256 bal = s.nftItemBalances[_tokenContract][_tokenId][itemId];
+      uint256 itemId = s.nftInstallations[_tokenContract][_tokenId][i];
+      uint256 bal = s.nftInstallationBalances[_tokenContract][_tokenId][itemId];
       itemBalancesOfTokenWithTypes_[i].itemId = itemId;
       itemBalancesOfTokenWithTypes_[i].balance = bal;
       itemBalancesOfTokenWithTypes_[i].installationType = s.installationTypes[itemId];
@@ -35,10 +35,10 @@ library ERC998 {
     uint256 _value
   ) internal {
     AppStorage storage s = LibAppStorage.diamondStorage();
-    s.nftItemBalances[_toContract][_toTokenId][_id] += _value;
-    if (s.nftItemIndexes[_toContract][_toTokenId][_id] == 0) {
-      s.nftItems[_toContract][_toTokenId].push(uint16(_id));
-      s.nftItemIndexes[_toContract][_toTokenId][_id] = s.nftItems[_toContract][_toTokenId].length;
+    s.nftInstallationBalances[_toContract][_toTokenId][_id] += _value;
+    if (s.nftInstallationIndexes[_toContract][_toTokenId][_id] == 0) {
+      s.nftInstallations[_toContract][_toTokenId].push(uint16(_id));
+      s.nftInstallationIndexes[_toContract][_toTokenId][_id] = s.nftInstallations[_toContract][_toTokenId].length;
     }
   }
 
@@ -48,10 +48,10 @@ library ERC998 {
     uint256 _value
   ) internal {
     AppStorage storage s = LibAppStorage.diamondStorage();
-    s.ownerItemBalances[_to][_id] += _value;
-    if (s.ownerItemIndexes[_to][_id] == 0) {
-      s.ownerItems[_to].push(uint16(_id));
-      s.ownerItemIndexes[_to][_id] = s.ownerItems[_to].length;
+    s.ownerInstallationBalances[_to][_id] += _value;
+    if (s.ownerInstallationIndexes[_to][_id] == 0) {
+      s.ownerInstallations[_to].push(uint16(_id));
+      s.ownerInstallationIndexes[_to][_id] = s.ownerInstallations[_to].length;
     }
   }
 
@@ -61,20 +61,20 @@ library ERC998 {
     uint256 _value
   ) internal {
     AppStorage storage s = LibAppStorage.diamondStorage();
-    uint256 bal = s.ownerItemBalances[_from][_id];
+    uint256 bal = s.ownerInstallationBalances[_from][_id];
     require(_value <= bal, "LibItems: Doesn't have that many to transfer");
     bal -= _value;
-    s.ownerItemBalances[_from][_id] = bal;
+    s.ownerInstallationBalances[_from][_id] = bal;
     if (bal == 0) {
-      uint256 index = s.ownerItemIndexes[_from][_id] - 1;
-      uint256 lastIndex = s.ownerItems[_from].length - 1;
+      uint256 index = s.ownerInstallationIndexes[_from][_id] - 1;
+      uint256 lastIndex = s.ownerInstallations[_from].length - 1;
       if (index != lastIndex) {
-        uint256 lastId = s.ownerItems[_from][lastIndex];
-        s.ownerItems[_from][index] = uint16(lastId);
-        s.ownerItemIndexes[_from][lastId] = index + 1;
+        uint256 lastId = s.ownerInstallations[_from][lastIndex];
+        s.ownerInstallations[_from][index] = uint16(lastId);
+        s.ownerInstallationIndexes[_from][lastId] = index + 1;
       }
-      s.ownerItems[_from].pop();
-      delete s.ownerItemIndexes[_from][_id];
+      s.ownerInstallations[_from].pop();
+      delete s.ownerInstallationIndexes[_from][_id];
     }
   }
 
@@ -85,20 +85,20 @@ library ERC998 {
     uint256 _value
   ) internal {
     AppStorage storage s = LibAppStorage.diamondStorage();
-    uint256 bal = s.nftItemBalances[_fromContract][_fromTokenId][_id];
+    uint256 bal = s.nftInstallationBalances[_fromContract][_fromTokenId][_id];
     require(_value <= bal, "Items: Doesn't have that many to transfer");
     bal -= _value;
-    s.nftItemBalances[_fromContract][_fromTokenId][_id] = bal;
+    s.nftInstallationBalances[_fromContract][_fromTokenId][_id] = bal;
     if (bal == 0) {
-      uint256 index = s.nftItemIndexes[_fromContract][_fromTokenId][_id] - 1;
-      uint256 lastIndex = s.nftItems[_fromContract][_fromTokenId].length - 1;
+      uint256 index = s.nftInstallationIndexes[_fromContract][_fromTokenId][_id] - 1;
+      uint256 lastIndex = s.nftInstallations[_fromContract][_fromTokenId].length - 1;
       if (index != lastIndex) {
-        uint256 lastId = s.nftItems[_fromContract][_fromTokenId][lastIndex];
-        s.nftItems[_fromContract][_fromTokenId][index] = uint16(lastId);
-        s.nftItemIndexes[_fromContract][_fromTokenId][lastId] = index + 1;
+        uint256 lastId = s.nftInstallations[_fromContract][_fromTokenId][lastIndex];
+        s.nftInstallations[_fromContract][_fromTokenId][index] = uint16(lastId);
+        s.nftInstallationIndexes[_fromContract][_fromTokenId][lastId] = index + 1;
       }
-      s.nftItems[_fromContract][_fromTokenId].pop();
-      delete s.nftItemIndexes[_fromContract][_fromTokenId][_id];
+      s.nftInstallations[_fromContract][_fromTokenId].pop();
+      delete s.nftInstallationIndexes[_fromContract][_fromTokenId][_id];
       if (_fromContract == address(this)) {
         // checkWearableIsEquipped(_fromTokenId, _id);
       }

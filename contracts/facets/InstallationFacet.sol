@@ -9,46 +9,41 @@ import {LibERC1155} from "../libraries/LibERC1155.sol";
 import {LibERC20} from "../libraries/LibERC20.sol";
 
 contract InstallationFacet is Modifiers {
-  //using LibAppStorage for AppStorage;
-
   event TransferToParent(address indexed _toContract, uint256 indexed _toTokenId, uint256 indexed _tokenTypeId, uint256 _value);
-
-  // event EquipWearables(uint256 indexed _tokenId, uint16[EQUIPPED_WEARABLE_SLOTS] _oldWearables, uint16[EQUIPPED_WEARABLE_SLOTS] _newWearables);
-  event UseConsumables(uint256 indexed _tokenId, uint256[] _itemIds, uint256[] _quantities);
 
   /***********************************|
    |             Read Functions         |
    |__________________________________*/
 
-  struct ItemIdIO {
-    uint256 itemId;
+  struct InstallationIdIO {
+    uint256 installationId;
     uint256 balance;
   }
 
-  ///@notice Returns balance for each item that exists for an account
+  ///@notice Returns balance for each installation that exists for an account
   ///@param _account Address of the account to query
-  ///@return bals_ An array of structs,each struct containing details about each item owned
-  function itemBalances(address _account) external view returns (ItemIdIO[] memory bals_) {
-    uint256 count = s.ownerItems[_account].length;
-    bals_ = new ItemIdIO[](count);
+  ///@return bals_ An array of structs,each struct containing details about each installation owned
+  function installationsBalances(address _account) external view returns (InstallationIdIO[] memory bals_) {
+    uint256 count = s.ownerInstallations[_account].length;
+    bals_ = new InstallationIdIO[](count);
     for (uint256 i; i < count; i++) {
-      uint256 itemId = s.ownerItems[_account][i];
-      bals_[i].balance = s.ownerItemBalances[_account][itemId];
-      bals_[i].itemId = itemId;
+      uint256 installationId = s.ownerInstallations[_account][i];
+      bals_[i].balance = s.ownerInstallationBalances[_account][installationId];
+      bals_[i].installationId = installationId;
     }
   }
 
-  ///@notice Returns balance for each item(and their types) that exists for an account
+  ///@notice Returns balance for each installation(and their types) that exists for an account
   ///@param _owner Address of the account to query
-  ///@return output_ An array of structs containing details about each item owned(including the item types)
-  function itemBalancesWithTypes(address _owner) external view returns (ItemTypeIO[] memory output_) {
-    uint256 count = s.ownerItems[_owner].length;
+  ///@return output_ An array of structs containing details about each installation owned(including the installation types)
+  function installationsBalancesWithTypes(address _owner) external view returns (ItemTypeIO[] memory output_) {
+    uint256 count = s.ownerInstallations[_owner].length;
     output_ = new ItemTypeIO[](count);
     for (uint256 i; i < count; i++) {
-      uint256 itemId = s.ownerItems[_owner][i];
-      output_[i].balance = s.ownerItemBalances[_owner][itemId];
-      output_[i].itemId = itemId;
-      output_[i].installationType = s.installationTypes[itemId];
+      uint256 installationId = s.ownerInstallations[_owner][i];
+      output_[i].balance = s.ownerInstallationBalances[_owner][installationId];
+      output_[i].itemId = installationId;
+      output_[i].installationType = s.installationTypes[installationId];
     }
   }
 
@@ -59,7 +54,7 @@ contract InstallationFacet is Modifiers {
         @return bal_    The _owner's balance of the token type requested
      */
   function balanceOf(address _owner, uint256 _id) external view returns (uint256 bal_) {
-    bal_ = s.ownerItemBalances[_owner][_id];
+    bal_ = s.ownerInstallationBalances[_owner][_id];
   }
 
   /// @notice Get the balance of a non-fungible parent token
@@ -72,35 +67,33 @@ contract InstallationFacet is Modifiers {
     uint256 _tokenId,
     uint256 _id
   ) external view returns (uint256 value) {
-    value = s.nftItemBalances[_tokenContract][_tokenId][_id];
+    value = s.nftInstallationBalances[_tokenContract][_tokenId][_id];
   }
 
   ///@notice Returns the balances for all ERC1155 items for a ERC721 token
-  ///@dev Only valid for claimed aavegotchis
   ///@param _tokenContract Contract address for the token to query
   ///@param _tokenId Identifier of the token to query
   ///@return bals_ An array of structs containing details about each item owned
-  function itemBalancesOfToken(address _tokenContract, uint256 _tokenId) external view returns (ItemIdIO[] memory bals_) {
-    uint256 count = s.nftItems[_tokenContract][_tokenId].length;
-    bals_ = new ItemIdIO[](count);
+  function installationBalancesOfToken(address _tokenContract, uint256 _tokenId) external view returns (InstallationIdIO[] memory bals_) {
+    uint256 count = s.nftInstallations[_tokenContract][_tokenId].length;
+    bals_ = new InstallationIdIO[](count);
     for (uint256 i; i < count; i++) {
-      uint256 itemId = s.nftItems[_tokenContract][_tokenId][i];
-      bals_[i].itemId = itemId;
-      bals_[i].balance = s.nftItemBalances[_tokenContract][_tokenId][itemId];
+      uint256 installationId = s.nftInstallations[_tokenContract][_tokenId][i];
+      bals_[i].installationId = installationId;
+      bals_[i].balance = s.nftInstallationBalances[_tokenContract][_tokenId][installationId];
     }
   }
 
   ///@notice Returns the balances for all ERC1155 items for a ERC721 token
-  ///@dev Only valid for claimed aavegotchis
   ///@param _tokenContract Contract address for the token to query
   ///@param _tokenId Identifier of the token to query
-  ///@return itemBalancesOfTokenWithTypes_ An array of structs containing details about each item owned(including the types)
-  function itemBalancesOfTokenWithTypes(address _tokenContract, uint256 _tokenId)
+  ///@return installationBalancesOfTokenWithTypes_ An array of structs containing details about each installation owned(including installation types)
+  function installationBalancesOfTokenWithTypes(address _tokenContract, uint256 _tokenId)
     external
     view
-    returns (ItemTypeIO[] memory itemBalancesOfTokenWithTypes_)
+    returns (ItemTypeIO[] memory installationBalancesOfTokenWithTypes_)
   {
-    itemBalancesOfTokenWithTypes_ = ERC998.itemBalancesOfTokenWithTypes(_tokenContract, _tokenId);
+    installationBalancesOfTokenWithTypes_ = ERC998.itemBalancesOfTokenWithTypes(_tokenContract, _tokenId);
   }
 
   /**
@@ -115,19 +108,9 @@ contract InstallationFacet is Modifiers {
     for (uint256 i; i < _owners.length; i++) {
       uint256 id = _ids[i];
       address owner = _owners[i];
-      bals[i] = s.ownerItemBalances[owner][id];
+      bals[i] = s.ownerInstallationBalances[owner][id];
     }
   }
-
-  ///@notice Query the current wearables equipped for an NFT
-  ///@dev only valid for claimed aavegotchis
-  ///@param _tokenId Identifier of the NFT to query
-  ///@return wearableIds_ An array containing the Identifiers of the wearable items currently equipped for the NFT
-  /* function equippedWearables(uint256 _tokenId) external view returns (uint16[EQUIPPED_WEARABLE_SLOTS] memory wearableIds_) {
-    wearableIds_ = s.aavegotchis[_tokenId].equippedWearables;
-  }
-
-*/
 
   ///@notice Query the item type of a particular installation
   ///@param _installationTypeId Item to query
@@ -139,14 +122,14 @@ contract InstallationFacet is Modifiers {
 
   ///@notice Query the item type of multiple installation types
   ///@param _installationTypeIds An array containing the identifiers of items to query
-  ///@return itemTypes_ An array of structs,each struct containing details about the item type of the corresponding item
-  function getInstallationTypes(uint256[] calldata _installationTypeIds) external view returns (InstallationType[] memory itemTypes_) {
+  ///@return installationTypes_ An array of structs,each struct containing details about the item type of the corresponding item
+  function getInstallationTypes(uint256[] calldata _installationTypeIds) external view returns (InstallationType[] memory installationTypes_) {
     if (_installationTypeIds.length == 0) {
-      itemTypes_ = s.installationTypes;
+      installationTypes_ = s.installationTypes;
     } else {
-      itemTypes_ = new InstallationType[](_installationTypeIds.length);
+      installationTypes_ = new InstallationType[](_installationTypeIds.length);
       for (uint256 i; i < _installationTypeIds.length; i++) {
-        itemTypes_[i] = s.installationTypes[_installationTypeIds[i]];
+        installationTypes_[i] = s.installationTypes[_installationTypeIds[i]];
       }
     }
   }
@@ -197,8 +180,11 @@ contract InstallationFacet is Modifiers {
         s.installationTypes[s.installations[msg.sender][_installationIds[i]].installationType].craftTime;
       require(block.timestamp >= readyBlock, "InstallationFacet: installation not ready");
       // mint installation
-
-      s.installations[msg.sender][_installationIds[i]].claimed = true;
+      LibERC1155._safeMint(
+        msg.sender,
+        s.installations[msg.sender][_installationIds[i]].installationType,
+        s.installations[msg.sender][_installationIds[i]].id
+      );
     }
   }
 

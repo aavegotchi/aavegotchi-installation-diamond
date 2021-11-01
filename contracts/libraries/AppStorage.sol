@@ -41,18 +41,17 @@ struct AppStorage {
   // owner => installationId => Installation
   mapping(address => mapping(uint256 => Installation)) installations;
   uint256 nextInstallationId;
-  //ERC1155 vars
-  mapping(uint256 => mapping(address => uint256)) balances;
-  mapping(address => mapping(address => bool)) operatorApprovals;
   // installationType => installationId
   mapping(uint256 => uint256) installationsIds;
+  //ERC1155 vars
+  mapping(address => mapping(address => bool)) operatorApprovals;
   //ERC998 vars
-  mapping(address => mapping(uint256 => mapping(uint256 => uint256))) nftItemBalances;
-  mapping(address => mapping(uint256 => uint256[])) nftItems;
-  mapping(address => mapping(uint256 => mapping(uint256 => uint256))) nftItemIndexes;
-  mapping(address => mapping(uint256 => uint256)) ownerItemBalances;
-  mapping(address => uint256[]) ownerItems;
-  mapping(address => mapping(uint256 => uint256)) ownerItemIndexes;
+  mapping(address => mapping(uint256 => mapping(uint256 => uint256))) nftInstallationBalances;
+  mapping(address => mapping(uint256 => uint256[])) nftInstallations;
+  mapping(address => mapping(uint256 => mapping(uint256 => uint256))) nftInstallationIndexes;
+  mapping(address => mapping(uint256 => uint256)) ownerInstallationBalances;
+  mapping(address => uint256[]) ownerInstallations;
+  mapping(address => mapping(uint256 => uint256)) ownerInstallationIndexes;
   //Installation metadata
   // mapping(uint16 => Reservoir) levelToReservoir;
   // mapping(uint16 => Harvester) levelToHarvester;

@@ -38,6 +38,31 @@ const _abi = [
       {
         indexed: true,
         internalType: "address",
+        name: "_owner",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "_installationType",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "_installationId",
+        type: "uint256",
+      },
+    ],
+    name: "MintInstallation",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
         name: "_operator",
         type: "address",
       },
@@ -180,7 +205,7 @@ const _abi = [
       {
         indexed: true,
         internalType: "uint256",
-        name: "_id",
+        name: "_tokenId",
         type: "uint256",
       },
     ],
@@ -190,7 +215,7 @@ const _abi = [
 ];
 
 const _bytecode =
-  "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea264697066735822122016cb654bcd22f6148d95019943e3b80d7c587738983074c3b797e0883a8dd1a164736f6c63430008090033";
+  "0x60566037600b82828239805160001a607314602a57634e487b7160e01b600052600060045260246000fd5b30600052607381538281f3fe73000000000000000000000000000000000000000030146080604052600080fdfea26469706673582212209ea30fa39bf8157d176c6dc025586acda2803ba29787e387e7a6020102378d6a64736f6c63430008090033";
 
 export class LibERC1155__factory extends ContractFactory {
   constructor(
