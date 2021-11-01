@@ -143,8 +143,49 @@ contract InstallationFacet is Modifiers {
     return LibStrings.strWithUint(s.baseUri, _id);
   }
 
+  function getAlchemicaAddresses() external view returns (address[] memory) {
+    return s.alchemicaAddresses;
+  }
+
   /***********************************|
    |             Write Functions        |
+   |__________________________________*/
+
+  function craftInstallations(uint256[] calldata _installationTypes) external {
+    for (uint8 i = 0; i < _installationTypes.length; i++) {
+      // TODO add level check
+      //take the required alchemica
+      for (uint8 j = 0; j < s.installationTypes[i].alchemicaCost.length; j++) {
+        LibERC20.transferFrom(s.alchemicaAddresses[j], msg.sender, address(this), s.installationTypes[i].alchemicaCost[j]);
+      }
+      //put the installation into a queue
+      //each wearable needs a unique queue id
+      s.installations[msg.sender][s.nextInstallationId] = Installation(s.nextInstallationId, block.number, i, false, msg.sender);
+      s.nextInstallationId++;
+    }
+    //after queue is over, user can claim installation
+  }
+
+  function claimInstallations(uint256[] calldata _installationIds) external {
+    for (uint8 i; i < _installationIds.length; i++) {
+      require(msg.sender == s.installations[msg.sender][_installationIds[i]].owner, "InstallationFacet: not owner");
+      require(!s.installations[msg.sender][_installationIds[i]].claimed, "InstallationFacet: already claimed");
+      uint256 readyBlock = s.installations[msg.sender][_installationIds[i]].startBlock +
+        s.installationTypes[s.installations[msg.sender][_installationIds[i]].installationType].craftTime;
+      require(block.number >= readyBlock, "InstallationFacet: installation not ready");
+      // mint installation
+      LibERC1155._safeMint(
+        msg.sender,
+        s.installations[msg.sender][_installationIds[i]].installationType,
+        s.installations[msg.sender][_installationIds[i]].id
+      );
+    }
+  }
+
+  // function upgradeInstallations()
+
+  /***********************************|
+   |             Owner Functions        |
    |__________________________________*/
 
   /**
@@ -158,49 +199,21 @@ contract InstallationFacet is Modifiers {
     }
   }
 
-  function craftInstallations(uint256[] calldata _installationTypes) external {
-    for (uint8 i = 0; i < _installationTypes.length; i++) {
-      //take the required alchemica
-      for (uint8 j = 0; j < s.installationTypes[i].alchemicaCost.length; i++) {
-        LibERC20.transferFrom(s.alchemicaAddresses[j], msg.sender, address(this), s.installationTypes[i].alchemicaCost[j]);
-      }
-      //put the installation into a queue
-      //each wearable needs a unique queue id
-      s.installations[msg.sender][s.nextInstallationId] = Installation(s.nextInstallationId, block.number, i, 1, false, msg.sender);
-      s.nextInstallationId++;
-    }
-    //after queue is over, user can claim installation
+  function setAlchemicaAddresses(address[] memory _addresses) external onlyOwner {
+    s.alchemicaAddresses = _addresses;
   }
-
-  function claimInstallations(uint256[] calldata _installationIds) external {
-    for (uint8 i; i < _installationIds.length; i++) {
-      require(msg.sender == s.installations[msg.sender][_installationIds[i]].owner, "InstallationFacet: not owner");
-      require(!s.installations[msg.sender][_installationIds[i]].claimed, "InstallationFacet: already claimed");
-      uint256 readyBlock = s.installations[msg.sender][_installationIds[i]].startBlock +
-        s.installationTypes[s.installations[msg.sender][_installationIds[i]].installationType].craftTime;
-      require(block.timestamp >= readyBlock, "InstallationFacet: installation not ready");
-      // mint installation
-      LibERC1155._safeMint(
-        msg.sender,
-        s.installations[msg.sender][_installationIds[i]].installationType,
-        s.installations[msg.sender][_installationIds[i]].id
-      );
-    }
-  }
-
-  /***********************************|
-   |             Owner Functions        |
-   |__________________________________*/
 
   function addInstallationTypes(InstallationType[] calldata _installationTypes) external onlyOwner {
     for (uint16 i = 0; i < _installationTypes.length; i++) {
       s.installationTypes.push(
         InstallationType(
           _installationTypes[i].installationType,
+          _installationTypes[i].level,
           _installationTypes[i].width,
           _installationTypes[i].height,
           _installationTypes[i].alchemicaType,
           _installationTypes[i].alchemicaCost,
+          _installationTypes[i].installationsVars,
           _installationTypes[i].craftTime
         )
       );
