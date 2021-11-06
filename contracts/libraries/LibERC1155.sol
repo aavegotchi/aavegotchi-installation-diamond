@@ -47,22 +47,6 @@ library LibERC1155 {
 
   event MintInstallation(address indexed _owner, uint256 indexed _installationType, uint256 _installationId);
 
-  function _transferFrom(
-    address from,
-    address _to,
-    uint256 _id,
-    uint256 _amount,
-    bytes memory _data
-  ) internal {}
-
-  function _batchTransferFrom(
-    address from,
-    address _to,
-    uint256[] memory _ids,
-    uint256[] memory _amounts,
-    bytes memory _data
-  ) internal {}
-
   function _safeMint(
     address _to,
     uint256 _installationType,
@@ -72,12 +56,46 @@ library LibERC1155 {
 
     require(!s.installations[_to][_installationId].claimed, "LibERC721: tokenId already minted");
     require(s.installations[_to][_installationId].owner == _to, "LibERC721: wrong owner");
-    s.ownerInstallations[_to].push(_installationId);
-    s.ownerInstallationBalances[_to][_installationType]++;
     s.installations[_to][_installationId].claimed = true;
-
+    addToOwner(_to, _installationType, 1);
     emit MintInstallation(_to, _installationType, _installationId);
     emit LibERC1155.TransferSingle(address(this), address(0), _to, _installationType, 1);
+  }
+
+  function addToOwner(
+    address _to,
+    uint256 _id,
+    uint256 _value
+  ) internal {
+    AppStorage storage s = LibAppStorage.diamondStorage();
+    s.ownerInstallationBalances[_to][_id] += _value;
+    if (s.ownerInstallationIndexes[_to][_id] == 0) {
+      s.ownerInstallations[_to].push(uint16(_id));
+      s.ownerInstallationIndexes[_to][_id] = s.ownerInstallations[_to].length;
+    }
+  }
+
+  function removeFromOwner(
+    address _from,
+    uint256 _id,
+    uint256 _value
+  ) internal {
+    AppStorage storage s = LibAppStorage.diamondStorage();
+    uint256 bal = s.ownerInstallationBalances[_from][_id];
+    require(_value <= bal, "LibERC1155: Doesn't have that many to transfer");
+    bal -= _value;
+    s.ownerInstallationBalances[_from][_id] = bal;
+    if (bal == 0) {
+      uint256 index = s.ownerInstallationIndexes[_from][_id] - 1;
+      uint256 lastIndex = s.ownerInstallations[_from].length - 1;
+      if (index != lastIndex) {
+        uint256 lastId = s.ownerInstallations[_from][lastIndex];
+        s.ownerInstallations[_from][index] = uint16(lastId);
+        s.ownerInstallationIndexes[_from][lastId] = index + 1;
+      }
+      s.ownerInstallations[_from].pop();
+      delete s.ownerInstallationIndexes[_from][_id];
+    }
   }
 
   function onERC1155Received(

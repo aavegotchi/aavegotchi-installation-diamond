@@ -153,14 +153,15 @@ contract InstallationFacet is Modifiers {
 
   function craftInstallations(uint256[] calldata _installationTypes) external {
     for (uint8 i = 0; i < _installationTypes.length; i++) {
-      // TODO add level check
+      //level check
+      require(s.installationTypes[_installationTypes[i]].level == 1, "InstallationFacet: can only craft level 1");
       //take the required alchemica
-      for (uint8 j = 0; j < s.installationTypes[i].alchemicaCost.length; j++) {
-        LibERC20.transferFrom(s.alchemicaAddresses[j], msg.sender, address(this), s.installationTypes[i].alchemicaCost[j]);
+      for (uint8 j = 0; j < s.installationTypes[_installationTypes[i]].alchemicaCost.length; j++) {
+        LibERC20.transferFrom(s.alchemicaAddresses[j], msg.sender, address(this), s.installationTypes[_installationTypes[i]].alchemicaCost[j]);
       }
       //put the installation into a queue
       //each wearable needs a unique queue id
-      s.installations[msg.sender][s.nextInstallationId] = Installation(s.nextInstallationId, block.number, i, false, msg.sender);
+      s.installations[msg.sender][s.nextInstallationId] = Installation(s.nextInstallationId, block.number, _installationTypes[i], false, msg.sender);
       s.nextInstallationId++;
     }
     //after queue is over, user can claim installation

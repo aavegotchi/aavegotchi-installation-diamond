@@ -21,10 +21,13 @@ import type { TypedEventFilter, TypedEvent, TypedListener } from "./common";
 
 interface DiamondInitInterface extends ethers.utils.Interface {
   functions: {
-    "init(address)": FunctionFragment;
+    "init(address,address)": FunctionFragment;
   };
 
-  encodeFunctionData(functionFragment: "init", values: [string]): string;
+  encodeFunctionData(
+    functionFragment: "init",
+    values: [string, string]
+  ): string;
 
   decodeFunctionResult(functionFragment: "init", data: BytesLike): Result;
 
@@ -76,19 +79,22 @@ export class DiamondInit extends BaseContract {
 
   functions: {
     init(
-      _installationContract: string,
+      _aavegotchiDiamond: string,
+      _realmDiamond: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<ContractTransaction>;
   };
 
   init(
-    _installationContract: string,
+    _aavegotchiDiamond: string,
+    _realmDiamond: string,
     overrides?: Overrides & { from?: string | Promise<string> }
   ): Promise<ContractTransaction>;
 
   callStatic: {
     init(
-      _installationContract: string,
+      _aavegotchiDiamond: string,
+      _realmDiamond: string,
       overrides?: CallOverrides
     ): Promise<void>;
   };
@@ -97,14 +103,16 @@ export class DiamondInit extends BaseContract {
 
   estimateGas: {
     init(
-      _installationContract: string,
+      _aavegotchiDiamond: string,
+      _realmDiamond: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<BigNumber>;
   };
 
   populateTransaction: {
     init(
-      _installationContract: string,
+      _aavegotchiDiamond: string,
+      _realmDiamond: string,
       overrides?: Overrides & { from?: string | Promise<string> }
     ): Promise<PopulatedTransaction>;
   };

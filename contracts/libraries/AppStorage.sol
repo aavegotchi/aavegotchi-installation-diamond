@@ -35,7 +35,8 @@ struct Installation {
 }
 
 struct AppStorage {
-  address installationContract;
+  address realmDiamond;
+  address aavegotchiDiamond;
   address[] alchemicaAddresses;
   string baseUri;
   InstallationType[] installationTypes;
@@ -45,7 +46,7 @@ struct AppStorage {
   // installationType => installationId
   mapping(uint256 => uint256) installationsIds;
   //ERC1155 vars
-  mapping(address => mapping(address => bool)) operatorApprovals;
+  mapping(address => mapping(address => bool)) operators;
   //ERC998 vars
   mapping(address => mapping(uint256 => mapping(uint256 => uint256))) nftInstallationBalances;
   mapping(address => mapping(uint256 => uint256[])) nftInstallations;

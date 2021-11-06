@@ -52,6 +52,7 @@ export async function deployDiamond() {
     "DiamondLoupeFacet",
     "OwnershipFacet",
     "InstallationFacet",
+    "ERC1155Facet",
   ];
   const cut = [];
   for (const FacetName of FacetNames) {
@@ -73,9 +74,10 @@ export async function deployDiamond() {
     diamond.address
   )) as DiamondCutFacet;
 
-  // call to init function // replace zero address with realmDiamond address
+  // call to init function
   const functionCall = diamondInit.interface.encodeFunctionData("init", [
-    "0x0000000000000000000000000000000000000000",
+    "0x86935F11C86623deC8a25696E1C19a8659CbF95d",
+    "0x1D0360BaC7299C86Ec8E99d0c1C9A95FEfaF2a11",
   ]);
   const tx = await diamondCut.diamondCut(
     cut,
