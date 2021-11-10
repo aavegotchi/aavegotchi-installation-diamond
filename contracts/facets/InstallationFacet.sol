@@ -2,7 +2,7 @@
 pragma solidity 0.8.9;
 
 import {ERC998, ItemTypeIO} from "../libraries/LibERC998.sol";
-import {LibAppStorage, InstallationType, Installation, Modifiers} from "../libraries/AppStorage.sol";
+import {LibAppStorage, InstallationType, QueueItem, Modifiers} from "../libraries/AppStorage.sol";
 import {LibStrings} from "../libraries/LibStrings.sol";
 import {LibMeta} from "../libraries/LibMeta.sol";
 import {LibERC1155} from "../libraries/LibERC1155.sol";
@@ -161,25 +161,21 @@ contract InstallationFacet is Modifiers {
       }
       //put the installation into a queue
       //each wearable needs a unique queue id
-      s.installations[msg.sender][s.nextInstallationId] = Installation(s.nextInstallationId, block.number, _installationTypes[i], false, msg.sender);
-      s.nextInstallationId++;
+      s.craftQueue[msg.sender][s.nextCraftId] = QueueItem(s.nextCraftId, block.number, _installationTypes[i], false, msg.sender);
+      s.nextCraftId++;
     }
     //after queue is over, user can claim installation
   }
 
-  function claimInstallations(uint256[] calldata _installationIds) external {
-    for (uint8 i; i < _installationIds.length; i++) {
-      require(msg.sender == s.installations[msg.sender][_installationIds[i]].owner, "InstallationFacet: not owner");
-      require(!s.installations[msg.sender][_installationIds[i]].claimed, "InstallationFacet: already claimed");
-      uint256 readyBlock = s.installations[msg.sender][_installationIds[i]].startBlock +
-        s.installationTypes[s.installations[msg.sender][_installationIds[i]].installationType].craftTime;
+  function claimInstallations(uint256[] calldata _queueIds) external {
+    for (uint8 i; i < _queueIds.length; i++) {
+      require(msg.sender == s.craftQueue[msg.sender][_queueIds[i]].owner, "InstallationFacet: not owner");
+      require(!s.craftQueue[msg.sender][_queueIds[i]].claimed, "InstallationFacet: already claimed");
+      uint256 readyBlock = s.craftQueue[msg.sender][_queueIds[i]].startBlock +
+        s.installationTypes[s.craftQueue[msg.sender][_queueIds[i]].installationType].craftTime;
       require(block.number >= readyBlock, "InstallationFacet: installation not ready");
       // mint installation
-      LibERC1155._safeMint(
-        msg.sender,
-        s.installations[msg.sender][_installationIds[i]].installationType,
-        s.installations[msg.sender][_installationIds[i]].id
-      );
+      LibERC1155._safeMint(msg.sender, s.craftQueue[msg.sender][_queueIds[i]].installationType, s.craftQueue[msg.sender][_queueIds[i]].id);
     }
   }
 

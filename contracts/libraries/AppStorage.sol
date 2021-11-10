@@ -14,19 +14,7 @@ struct InstallationType {
   // glam token to reduce craftTime
 }
 
-// struct Harvester {
-//   uint16 alchemicaType; //0 = none 1 = fud, 2 = fomo, 3 = alpha, 4 = kek
-//   uint256 harvestRate;
-// }
-
-// struct Reservoir {
-//   uint16 alchemicaType;
-//   uint256 capacity;
-//   uint256 spillRadius;
-//   uint256 spillPercentage;
-// }
-
-struct Installation {
+struct QueueItem {
   uint256 id;
   uint256 startBlock;
   uint256 installationType;
@@ -41,10 +29,8 @@ struct AppStorage {
   string baseUri;
   InstallationType[] installationTypes;
   // owner => installationId => Installation
-  mapping(address => mapping(uint256 => Installation)) installations;
-  uint256 nextInstallationId;
-  // installationType => installationId
-  mapping(uint256 => uint256) installationsIds;
+  mapping(address => mapping(uint256 => QueueItem)) craftQueue;
+  uint256 nextCraftId;
   //ERC1155 vars
   mapping(address => mapping(address => bool)) operators;
   //ERC998 vars
