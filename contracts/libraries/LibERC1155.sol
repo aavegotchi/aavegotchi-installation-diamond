@@ -54,8 +54,8 @@ library LibERC1155 {
   ) internal {
     AppStorage storage s = LibAppStorage.diamondStorage();
 
-    require(!s.installations[_to][_installationId].claimed, "LibERC721: tokenId already minted");
-    require(s.installations[_to][_installationId].owner == _to, "LibERC721: wrong owner");
+    require(!s.installations[_to][_installationId].claimed, "LibERC1155: tokenId already minted");
+    require(s.installations[_to][_installationId].owner == _to, "LibERC1155: wrong owner");
     s.installations[_to][_installationId].claimed = true;
     addToOwner(_to, _installationType, 1);
     emit MintInstallation(_to, _installationType, _installationId);
