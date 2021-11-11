@@ -14,6 +14,7 @@ contract InstallationFacet is Modifiers {
   event AddedToQueue(uint256 indexed _queueId, uint256 indexed _installationType, uint256 _readyBlock, address _sender);
 
   event QueueClaimed(uint256 indexed _queueId);
+  event CraftTimeReduced(uint256 indexed _queueId, uint256 _blocks);
 
   /***********************************|
    |             Read Functions         |
@@ -175,6 +176,23 @@ contract InstallationFacet is Modifiers {
       s.nextCraftId++;
     }
     //after queue is over, user can claim installation
+  }
+
+  function reduceCraftTime(uint256[] calldata _queueIds, uint256[] calldata _amounts) external {
+    require(_queueIds.length == _amounts.length, "InstallationFacet: Mismatched arrays");
+    for (uint8 i; i < _queueIds.length; i++) {
+      uint256 queueId = _queueIds[i];
+      QueueItem storage queueItem = s.craftQueue[queueId];
+      require(msg.sender == queueItem.owner, "InstallationFacet: not owner");
+
+      require(block.number <= queueItem.readyBlock, "InstallationFacet: installation already done");
+
+      //todo: check user has enough GLMR
+      //todo: burn GLMR tokens
+
+      queueItem.readyBlock -= _amounts[i];
+      emit CraftTimeReduced(queueId, _amounts[i]);
+    }
   }
 
   function claimInstallations(uint256[] calldata _queueIds) external {
