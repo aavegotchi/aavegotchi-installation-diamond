@@ -50,15 +50,15 @@ library LibERC1155 {
   function _safeMint(
     address _to,
     uint256 _installationType,
-    uint256 _installationId
+    uint256 _queueId
   ) internal {
     AppStorage storage s = LibAppStorage.diamondStorage();
 
-    require(!s.installations[_to][_installationId].claimed, "LibERC1155: tokenId already minted");
-    require(s.installations[_to][_installationId].owner == _to, "LibERC1155: wrong owner");
-    s.installations[_to][_installationId].claimed = true;
+    require(!s.craftQueue[_queueId].claimed, "LibERC1155: tokenId already minted");
+    require(s.craftQueue[_queueId].owner == _to, "LibERC1155: wrong owner");
+    s.craftQueue[_queueId].claimed = true;
     addToOwner(_to, _installationType, 1);
-    emit MintInstallation(_to, _installationType, _installationId);
+    emit MintInstallation(_to, _installationType, _queueId);
     emit LibERC1155.TransferSingle(address(this), address(0), _to, _installationType, 1);
   }
 

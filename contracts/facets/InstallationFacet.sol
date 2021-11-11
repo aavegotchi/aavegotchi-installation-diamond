@@ -11,6 +11,10 @@ import {LibERC20} from "../libraries/LibERC20.sol";
 contract InstallationFacet is Modifiers {
   event TransferToParent(address indexed _toContract, uint256 indexed _toTokenId, uint256 indexed _tokenTypeId, uint256 _value);
 
+  event AddedToQueue(uint256 indexed _queueId, uint256 indexed _installationType, uint256 _readyBlock, address _sender);
+
+  event QueueClaimed(uint256 indexed _queueId);
+
   /***********************************|
    |             Read Functions         |
    |__________________________________*/
@@ -156,12 +160,18 @@ contract InstallationFacet is Modifiers {
       //level check
       require(s.installationTypes[_installationTypes[i]].level == 1, "InstallationFacet: can only craft level 1");
       //take the required alchemica
-      for (uint8 j = 0; j < s.installationTypes[_installationTypes[i]].alchemicaCost.length; j++) {
+      InstallationType memory installationType = s.installationTypes[_installationTypes[i]];
+      for (uint8 j = 0; j < installationType.alchemicaCost.length; j++) {
         LibERC20.transferFrom(s.alchemicaAddresses[j], msg.sender, address(this), s.installationTypes[_installationTypes[i]].alchemicaCost[j]);
       }
+
+      uint256 readyBlock = block.number + installationType.craftTime;
+
       //put the installation into a queue
       //each wearable needs a unique queue id
-      s.craftQueue[msg.sender][s.nextCraftId] = QueueItem(s.nextCraftId, block.number, _installationTypes[i], false, msg.sender);
+      s.craftQueue.push(QueueItem(s.nextCraftId, readyBlock, _installationTypes[i], false, msg.sender));
+
+      emit AddedToQueue(s.nextCraftId, _installationTypes[i], readyBlock, msg.sender);
       s.nextCraftId++;
     }
     //after queue is over, user can claim installation
@@ -169,13 +179,16 @@ contract InstallationFacet is Modifiers {
 
   function claimInstallations(uint256[] calldata _queueIds) external {
     for (uint8 i; i < _queueIds.length; i++) {
-      require(msg.sender == s.craftQueue[msg.sender][_queueIds[i]].owner, "InstallationFacet: not owner");
-      require(!s.craftQueue[msg.sender][_queueIds[i]].claimed, "InstallationFacet: already claimed");
-      uint256 readyBlock = s.craftQueue[msg.sender][_queueIds[i]].startBlock +
-        s.installationTypes[s.craftQueue[msg.sender][_queueIds[i]].installationType].craftTime;
-      require(block.number >= readyBlock, "InstallationFacet: installation not ready");
+      uint256 queueId = _queueIds[i];
+      QueueItem memory queueItem = s.craftQueue[queueId];
+      require(msg.sender == queueItem.owner, "InstallationFacet: not owner");
+      require(!queueItem.claimed, "InstallationFacet: already claimed");
+
+      require(block.number >= queueItem.readyBlock, "InstallationFacet: installation not ready");
       // mint installation
-      LibERC1155._safeMint(msg.sender, s.craftQueue[msg.sender][_queueIds[i]].installationType, s.craftQueue[msg.sender][_queueIds[i]].id);
+
+      LibERC1155._safeMint(msg.sender, queueItem.installationType, queueItem.id);
+      emit QueueClaimed(queueId);
     }
   }
 

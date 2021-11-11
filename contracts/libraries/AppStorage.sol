@@ -16,7 +16,7 @@ struct InstallationType {
 
 struct QueueItem {
   uint256 id;
-  uint256 startBlock;
+  uint256 readyBlock;
   uint256 installationType;
   bool claimed;
   address owner;
@@ -29,7 +29,7 @@ struct AppStorage {
   string baseUri;
   InstallationType[] installationTypes;
   // owner => installationId => Installation
-  mapping(address => mapping(uint256 => QueueItem)) craftQueue;
+  QueueItem[] craftQueue;
   uint256 nextCraftId;
   //ERC1155 vars
   mapping(address => mapping(address => bool)) operators;
@@ -40,9 +40,6 @@ struct AppStorage {
   mapping(address => mapping(uint256 => uint256)) ownerInstallationBalances;
   mapping(address => uint256[]) ownerInstallations;
   mapping(address => mapping(uint256 => uint256)) ownerInstallationIndexes;
-  //Installation metadata
-  // mapping(uint16 => Reservoir) levelToReservoir;
-  // mapping(uint16 => Harvester) levelToHarvester;
 }
 
 library LibAppStorage {
