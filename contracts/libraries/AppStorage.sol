@@ -9,7 +9,10 @@ struct InstallationType {
   uint256 height;
   uint16 alchemicaType; //0 = none 1 = fud, 2 = fomo, 3 = alpha, 4 = kek
   uint256[] alchemicaCost; // [fud, fomo, alpha, kek]
-  uint256[] installationsVars; // 0 = harvestRate, 1 = capacity, 2 = spillRadius, 3 = spillPercentage
+  uint256 harvestRate;
+  uint256 capacity;
+  uint256 spillRadius;
+  uint256 spillPercentage;
   uint256 craftTime; // in blocks
   // glam token to reduce craftTime
 }
@@ -28,7 +31,6 @@ struct AppStorage {
   address[] alchemicaAddresses;
   string baseUri;
   InstallationType[] installationTypes;
-  // owner => installationId => Installation
   QueueItem[] craftQueue;
   uint256 nextCraftId;
   //ERC1155 vars
@@ -53,10 +55,13 @@ library LibAppStorage {
 contract Modifiers {
   AppStorage internal s;
 
-  // modifier onlyParcelOwner() {}
-
   modifier onlyOwner() {
     LibDiamond.enforceIsContractOwner();
+    _;
+  }
+
+  modifier onlyRealmDiamond() {
+    require(msg.sender == s.realmDiamond, "LibDiamond: Must be realm diamond");
     _;
   }
 }

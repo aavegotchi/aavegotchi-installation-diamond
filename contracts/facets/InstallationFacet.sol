@@ -6,7 +6,9 @@ import {LibAppStorage, InstallationType, QueueItem, Modifiers} from "../librarie
 import {LibStrings} from "../libraries/LibStrings.sol";
 import {LibMeta} from "../libraries/LibMeta.sol";
 import {LibERC1155} from "../libraries/LibERC1155.sol";
+import {ERC998} from "../libraries/LibERC998.sol";
 import {LibERC20} from "../libraries/LibERC20.sol";
+import {IERC721} from "../interfaces/IERC721.sol";
 
 contract InstallationFacet is Modifiers {
   event TransferToParent(address indexed _toContract, uint256 indexed _toTokenId, uint256 indexed _tokenTypeId, uint256 _value);
@@ -203,14 +205,28 @@ contract InstallationFacet is Modifiers {
       require(!queueItem.claimed, "InstallationFacet: already claimed");
 
       require(block.number >= queueItem.readyBlock, "InstallationFacet: installation not ready");
-      // mint installation
 
+      // mint installation
       LibERC1155._safeMint(msg.sender, queueItem.installationType, queueItem.id);
       emit QueueClaimed(queueId);
     }
   }
 
-  // function upgradeInstallations()
+  function equipInstallation(
+    address _owner,
+    uint256 _realmId,
+    uint256 _installationId
+  ) external onlyRealmDiamond {
+    ERC998.removeFromOwner(_owner, _installationId, 1);
+    ERC998.addToParent(s.realmDiamond, _realmId, _installationId, 1);
+  }
+
+  function unequipInstallation(uint256 _realmId, uint256 _installationId) external onlyRealmDiamond {
+    ERC998.removeFromParent(s.realmDiamond, _realmId, _installationId, 1);
+    // is this enough to burn?
+  }
+
+  // TODO function upgradeInstallations()
 
   /***********************************|
    |             Owner Functions        |
@@ -241,12 +257,15 @@ contract InstallationFacet is Modifiers {
           _installationTypes[i].height,
           _installationTypes[i].alchemicaType,
           _installationTypes[i].alchemicaCost,
-          _installationTypes[i].installationsVars,
+          _installationTypes[i].harvestRate,
+          _installationTypes[i].capacity,
+          _installationTypes[i].spillRadius,
+          _installationTypes[i].spillPercentage,
           _installationTypes[i].craftTime
         )
       );
     }
   }
 
-  // function updateInstallationType(Installation memory _updatedInstallation) external onlyOwner {}
+  // TODO function updateInstallationType(Installation memory _updatedInstallation) external onlyOwner {}
 }

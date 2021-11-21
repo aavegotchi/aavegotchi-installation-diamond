@@ -53,7 +53,10 @@ describe("Installations tests", async function () {
       height: 4,
       alchemicaType: 0,
       alchemicaCost: [1, 2, 0, 3],
-      installationsVars: [2, 0, 0, 0],
+      harvestRate: 2,
+      capacity: 0,
+      spillRadius: 0,
+      spillPercentage: 0,
       craftTime: 10000,
     });
     installations.push({
@@ -63,7 +66,10 @@ describe("Installations tests", async function () {
       height: 6,
       alchemicaType: 4,
       alchemicaCost: [4, 5, 6, 0],
-      installationsVars: [0, 50000, 100, 100],
+      harvestRate: 0,
+      capacity: 50000,
+      spillRadius: 100,
+      spillPercentage: 100,
       craftTime: 50000,
     });
     await installationFacet.addInstallationTypes(installations);
