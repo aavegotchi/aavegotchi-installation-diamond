@@ -215,15 +215,20 @@ contract InstallationFacet is Modifiers {
   function equipInstallation(
     address _owner,
     uint256 _realmId,
-    uint256 _installationId
+    uint256 _installationType
   ) external onlyRealmDiamond {
-    ERC998.removeFromOwner(_owner, _installationId, 1);
-    ERC998.addToParent(s.realmDiamond, _realmId, _installationId, 1);
+    ERC998.removeFromOwner(_owner, _installationType, 1);
+    ERC998.addToParent(s.realmDiamond, _realmId, _installationType, 1);
+    emit TransferToParent(s.realmDiamond, _realmId, _installationType, 1);
   }
 
-  function unequipInstallation(uint256 _realmId, uint256 _installationId) external onlyRealmDiamond {
-    ERC998.removeFromParent(s.realmDiamond, _realmId, _installationId, 1);
-    // is this enough to burn?
+  function unequipInstallation(
+    address _owner,
+    uint256 _realmId,
+    uint256 _installationType
+  ) external onlyRealmDiamond {
+    ERC998.removeFromParent(s.realmDiamond, _realmId, _installationType, 1);
+    LibERC1155._burn(_owner, _installationType, 1);
   }
 
   // TODO function upgradeInstallations()

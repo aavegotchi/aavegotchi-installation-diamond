@@ -98,6 +98,15 @@ library LibERC1155 {
     }
   }
 
+  function _burn(
+    address _from,
+    uint256 _installationType,
+    uint256 _amount
+  ) internal {
+    removeFromOwner(_from, _installationType, _amount);
+    emit LibERC1155.TransferSingle(address(this), _from, address(0), _installationType, _amount);
+  }
+
   function onERC1155Received(
     address _operator,
     address _from,
