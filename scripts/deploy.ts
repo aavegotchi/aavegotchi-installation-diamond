@@ -61,7 +61,7 @@ export async function deployDiamond() {
       gasPrice: gasPrice,
     });
     await facet.deployed();
-    console.log(`${FacetName} deployed: ${diamondInit.address}`);
+    console.log(`${FacetName} deployed: ${facet.address}`);
     cut.push({
       facetAddress: facet.address,
       action: FacetCutAction.Add,
@@ -75,10 +75,7 @@ export async function deployDiamond() {
   )) as DiamondCutFacet;
 
   // call to init function
-  const functionCall = diamondInit.interface.encodeFunctionData("init", [
-    "0x86935F11C86623deC8a25696E1C19a8659CbF95d",
-    "0x1D0360BaC7299C86Ec8E99d0c1C9A95FEfaF2a11",
-  ]);
+  const functionCall = diamondInit.interface.encodeFunctionData("init");
   const tx = await diamondCut.diamondCut(
     cut,
     diamondInit.address,

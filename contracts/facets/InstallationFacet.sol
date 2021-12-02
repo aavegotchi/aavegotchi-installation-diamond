@@ -252,6 +252,11 @@ contract InstallationFacet is Modifiers {
     s.alchemicaAddresses = _addresses;
   }
 
+  function setDiamondsAddresses(address _aavegotchiDiamond, address _realmDiamond) external onlyOwner {
+    s.aavegotchiDiamond = _aavegotchiDiamond;
+    s.realmDiamond = _realmDiamond;
+  }
+
   function addInstallationTypes(InstallationType[] calldata _installationTypes) external onlyOwner {
     for (uint16 i = 0; i < _installationTypes.length; i++) {
       s.installationTypes.push(
