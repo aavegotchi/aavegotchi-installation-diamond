@@ -2,17 +2,17 @@
 pragma solidity 0.8.9;
 
 import {ERC998, ItemTypeIO} from "../libraries/LibERC998.sol";
-import {LibAppStorage, InstallationType, QueueItem, Modifiers} from "../libraries/AppStorage.sol";
+import {LibAppStorage, InstallationType, QueueItem, UpgradeQueue, Modifiers} from "../libraries/AppStorage.sol";
 import {LibStrings} from "../libraries/LibStrings.sol";
 import {LibMeta} from "../libraries/LibMeta.sol";
 import {LibERC1155} from "../libraries/LibERC1155.sol";
 import {ERC998} from "../libraries/LibERC998.sol";
 import {LibERC20} from "../libraries/LibERC20.sol";
+import {LibInstallation} from "../libraries/LibInstallation.sol";
 import {IERC721} from "../interfaces/IERC721.sol";
+import {RealmDiamond} from "../interfaces/RealmDiamond.sol";
 
 contract InstallationFacet is Modifiers {
-  event TransferToParent(address indexed _toContract, uint256 indexed _toTokenId, uint256 indexed _tokenTypeId, uint256 _value);
-
   event AddedToQueue(uint256 indexed _queueId, uint256 indexed _installationType, uint256 _readyBlock, address _sender);
 
   event QueueClaimed(uint256 indexed _queueId);
@@ -215,23 +215,71 @@ contract InstallationFacet is Modifiers {
   function equipInstallation(
     address _owner,
     uint256 _realmId,
-    uint256 _installationType
+    uint256 _installationId
   ) external onlyRealmDiamond {
-    ERC998.removeFromOwner(_owner, _installationType, 1);
-    ERC998.addToParent(s.realmDiamond, _realmId, _installationType, 1);
-    emit TransferToParent(s.realmDiamond, _realmId, _installationType, 1);
+    LibInstallation._equipInstallation(_owner, _realmId, _installationId);
   }
 
   function unequipInstallation(
     address _owner,
     uint256 _realmId,
-    uint256 _installationType
+    uint256 _installationId
   ) external onlyRealmDiamond {
-    ERC998.removeFromParent(s.realmDiamond, _realmId, _installationType, 1);
-    LibERC1155._burn(_owner, _installationType, 1);
+    LibInstallation._unequipInstallation(_owner, _realmId, _installationId);
   }
 
-  // TODO function upgradeInstallations()
+  function upgradeInstallation(UpgradeQueue calldata _upgradeQueue) external {
+    // check owner
+    address parcelOwner = IERC721(s.realmDiamond).ownerOf(_upgradeQueue.parcelId);
+    require(parcelOwner == _upgradeQueue.owner, "InstallationFacet: not owner");
+    // check coordinates
+    RealmDiamond realm = RealmDiamond(s.realmDiamond);
+    realm.checkCoordinates(_upgradeQueue.parcelId, _upgradeQueue.coordinateX, _upgradeQueue.coordinateY, _upgradeQueue.prevInstallationId);
+    // check tech tree
+    InstallationType memory prevInstallation = s.installationTypes[_upgradeQueue.prevInstallationId];
+    InstallationType memory nextInstallation = s.installationTypes[_upgradeQueue.nextInstallationId];
+    require(prevInstallation.installationType == nextInstallation.installationType, "InstallationFacet: wrong installation type");
+    require(prevInstallation.alchemicaType == nextInstallation.alchemicaType, "InstallationFacet: wrong alchemicaType");
+    require(prevInstallation.level == nextInstallation.level - 1, "InstallationFacet: wrong installation level");
+
+    uint256 readyBlock = block.number + nextInstallation.craftTime;
+    UpgradeQueue memory upgrade = UpgradeQueue(
+      _upgradeQueue.parcelId,
+      _upgradeQueue.coordinateX,
+      _upgradeQueue.coordinateY,
+      _upgradeQueue.prevInstallationId,
+      _upgradeQueue.nextInstallationId,
+      readyBlock,
+      false,
+      _upgradeQueue.owner
+    );
+    s.upgradeQueue.push(upgrade);
+  }
+
+  function finalizeUpgrade() public {
+    uint8 counter = 3;
+    for (uint256 index; index < s.upgradeQueue.length; index++) {
+      UpgradeQueue memory queueUpgrade = s.upgradeQueue[index];
+      // check that upgrade is ready
+      if (block.number >= queueUpgrade.readyBlock) {
+        // burn old installation
+        LibInstallation._unequipInstallation(queueUpgrade.owner, queueUpgrade.parcelId, queueUpgrade.prevInstallationId);
+        // mint new installation
+        LibERC1155._safeMint(queueUpgrade.owner, queueUpgrade.nextInstallationId, index);
+        // equip new installation
+        LibInstallation._equipInstallation(queueUpgrade.owner, queueUpgrade.parcelId, queueUpgrade.nextInstallationId);
+        // update realm diamond
+        RealmDiamond realm = RealmDiamond(s.realmDiamond);
+        realm.upgradeInstallation(queueUpgrade.parcelId, queueUpgrade.prevInstallationId, queueUpgrade.nextInstallationId);
+        // pop upgrade from array
+        // todo evaluate if there is a better solution for removing the element
+        s.upgradeQueue[index] = s.upgradeQueue[s.upgradeQueue.length - 1];
+        s.upgradeQueue.pop();
+        counter--;
+      }
+      if (counter == 0) break;
+    }
+  }
 
   /***********************************|
    |             Owner Functions        |

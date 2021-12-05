@@ -25,6 +25,17 @@ struct QueueItem {
   address owner;
 }
 
+struct UpgradeQueue {
+  uint256 parcelId;
+  uint256 coordinateX;
+  uint256 coordinateY;
+  uint256 prevInstallationId;
+  uint256 nextInstallationId;
+  uint256 readyBlock;
+  bool claimed;
+  address owner;
+}
+
 struct AppStorage {
   address realmDiamond;
   address aavegotchiDiamond;
@@ -42,6 +53,7 @@ struct AppStorage {
   mapping(address => mapping(uint256 => uint256)) ownerInstallationBalances;
   mapping(address => uint256[]) ownerInstallations;
   mapping(address => mapping(uint256 => uint256)) ownerInstallationIndexes;
+  UpgradeQueue[] upgradeQueue;
 }
 
 library LibAppStorage {

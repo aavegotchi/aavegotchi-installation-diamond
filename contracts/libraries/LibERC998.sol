@@ -99,30 +99,6 @@ library ERC998 {
       }
       s.nftInstallations[_fromContract][_fromTokenId].pop();
       delete s.nftInstallationIndexes[_fromContract][_fromTokenId][_id];
-      if (_fromContract == address(this)) {
-        // checkWearableIsEquipped(_fromTokenId, _id);
-      }
-    }
-
-    /*
-    if (_fromContract == address(this) && bal == 1) {
-      Aavegotchi storage aavegotchi = s.aavegotchis[_fromTokenId];
-      if (
-        aavegotchi.equippedWearables[LibItems.WEARABLE_SLOT_HAND_LEFT] == _id &&
-        aavegotchi.equippedWearables[LibItems.WEARABLE_SLOT_HAND_RIGHT] == _id
-      ) {
-        revert("LibItems: Can't hold 1 item in both hands");
-      }
-      */
-    // }
-  }
-
-  /*
-  function checkWearableIsEquipped(uint256 _fromTokenId, uint256 _id) internal view {
-    AppStorage storage s = LibAppStorage.diamondStorage();
-    for (uint256 i; i < EQUIPPED_WEARABLE_SLOTS; i++) {
-      require(s.aavegotchis[_fromTokenId].equippedWearables[i] != _id, "Items: Cannot transfer wearable that is equipped");
     }
   }
-  */
 }
