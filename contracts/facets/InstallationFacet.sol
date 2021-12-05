@@ -73,7 +73,7 @@ contract InstallationFacet is Modifiers {
     address _tokenContract,
     uint256 _tokenId,
     uint256 _id
-  ) external view returns (uint256 value) {
+  ) public view returns (uint256 value) {
     value = s.nftInstallationBalances[_tokenContract][_tokenId][_id];
   }
 
@@ -81,7 +81,7 @@ contract InstallationFacet is Modifiers {
   ///@param _tokenContract Contract address for the token to query
   ///@param _tokenId Identifier of the token to query
   ///@return bals_ An array of structs containing details about each item owned
-  function installationBalancesOfToken(address _tokenContract, uint256 _tokenId) external view returns (InstallationIdIO[] memory bals_) {
+  function installationBalancesOfToken(address _tokenContract, uint256 _tokenId) public view returns (InstallationIdIO[] memory bals_) {
     uint256 count = s.nftInstallations[_tokenContract][_tokenId].length;
     bals_ = new InstallationIdIO[](count);
     for (uint256 i; i < count; i++) {
@@ -217,9 +217,27 @@ contract InstallationFacet is Modifiers {
     uint256 _realmId,
     uint256 _installationType
   ) external onlyRealmDiamond {
-    ERC998.removeFromOwner(_owner, _installationType, 1);
-    ERC998.addToParent(s.realmDiamond, _realmId, _installationType, 1);
-    emit TransferToParent(s.realmDiamond, _realmId, _installationType, 1);
+    uint256[] memory prerequisites = s.installationTypes[_installationType].prerequisites;
+
+    bool techTreePasses = false;
+    for (uint256 i = 0; i < prerequisites.length; i++) {
+      //@todo: Check prerequisites
+      //ensure that this installation already has at least one required installation on it before adding
+      uint256 prerequisiteId = prerequisites[i];
+      uint256 equippedBalance = balanceOfToken(s.realmDiamond, _realmId, prerequisiteId);
+      if (equippedBalance > 0) {
+        techTreePasses = true;
+      } else {
+        techTreePasses = false;
+        break;
+      }
+    }
+
+    if (techTreePasses) {
+      ERC998.removeFromOwner(_owner, _installationType, 1);
+      ERC998.addToParent(s.realmDiamond, _realmId, _installationType, 1);
+      emit TransferToParent(s.realmDiamond, _realmId, _installationType, 1);
+    } else revert("InstallationFacet: Tech Tree reqs not met");
   }
 
   function unequipInstallation(
@@ -227,6 +245,27 @@ contract InstallationFacet is Modifiers {
     uint256 _realmId,
     uint256 _installationType
   ) external onlyRealmDiamond {
+    //@todo: Check prerequisites
+    InstallationIdIO[] memory installationBalances = installationBalancesOfToken(s.realmDiamond, _realmId);
+
+    uint256 removeInstallationBalance = balanceOfToken(s.realmDiamond, _realmId, _installationType);
+
+    //Iterate through all equipped installationTypes to check if installation to be unequipped is a prerequisite of any
+    for (uint256 i = 0; i < installationBalances.length; i++) {
+      uint256 installationId = installationBalances[i].installationId;
+
+      uint256[] memory prerequisites = s.installationTypes[installationId].prerequisites;
+
+      for (uint256 j = 0; j < prerequisites.length; j++) {
+        //Check that this installation is not the prequisite for any other currently equipped installations
+        uint256 prerequisiteId = prerequisites[j];
+
+        if (prerequisiteId == installationId && removeInstallationBalance < 2) {
+          revert("InstallationFacet: Tech Tree Reqs not met");
+        }
+      }
+    }
+
     ERC998.removeFromParent(s.realmDiamond, _realmId, _installationType, 1);
     LibERC1155._burn(_owner, _installationType, 1);
   }
@@ -271,7 +310,8 @@ contract InstallationFacet is Modifiers {
           _installationTypes[i].capacity,
           _installationTypes[i].spillRadius,
           _installationTypes[i].spillPercentage,
-          _installationTypes[i].craftTime
+          _installationTypes[i].craftTime,
+          _installationTypes[i].prerequisites
         )
       );
     }

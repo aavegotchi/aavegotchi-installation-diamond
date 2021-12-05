@@ -14,8 +14,19 @@ struct InstallationType {
   uint256 spillRadius;
   uint256 spillPercentage;
   uint256 craftTime; // in blocks
-  // glam token to reduce craftTime
+  uint256[] prerequisites; //IDs of installations that must be present before this installation can be added
 }
+
+//Prerequisites:
+/*
+Altar : none
+Harvester: Altar Lvl 1
+Reservoir: Altar Lvl 1
+Wall: Altar Lvl 1
+Lodge: Altar Lvl 4
+Lodge Lvl 4: Lodge Lvl 3 + Altar Level 6
+Lodge Lvl 7: Lodge Lvl 6 + Altar Lvl 9
+*/
 
 struct QueueItem {
   uint256 id;
