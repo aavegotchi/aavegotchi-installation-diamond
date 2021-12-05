@@ -16,7 +16,10 @@ contract InstallationFacet is Modifiers {
   event AddedToQueue(uint256 indexed _queueId, uint256 indexed _installationType, uint256 _readyBlock, address _sender);
 
   event QueueClaimed(uint256 indexed _queueId);
+
   event CraftTimeReduced(uint256 indexed _queueId, uint256 _blocks);
+
+  event UpgradeInitiated(uint256 _parcelId, uint256 _coordinateX, uint256 _coordinateY, uint256 blockInitiated, uint256 readyBlock);
 
   /***********************************|
    |             Read Functions         |
@@ -254,6 +257,8 @@ contract InstallationFacet is Modifiers {
       _upgradeQueue.owner
     );
     s.upgradeQueue.push(upgrade);
+
+    emit UpgradeInitiated(_upgradeQueue.parcelId, _upgradeQueue.coordinateX, _upgradeQueue.coordinateY, block.number, readyBlock);
   }
 
   function finalizeUpgrade() public {
