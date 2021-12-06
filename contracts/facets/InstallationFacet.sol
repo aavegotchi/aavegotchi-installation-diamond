@@ -76,7 +76,7 @@ contract InstallationFacet is Modifiers {
     address _tokenContract,
     uint256 _tokenId,
     uint256 _id
-  ) external view returns (uint256 value) {
+  ) public view returns (uint256 value) {
     value = s.nftInstallationBalances[_tokenContract][_tokenId][_id];
   }
 
@@ -84,7 +84,7 @@ contract InstallationFacet is Modifiers {
   ///@param _tokenContract Contract address for the token to query
   ///@param _tokenId Identifier of the token to query
   ///@return bals_ An array of structs containing details about each item owned
-  function installationBalancesOfToken(address _tokenContract, uint256 _tokenId) external view returns (InstallationIdIO[] memory bals_) {
+  function installationBalancesOfToken(address _tokenContract, uint256 _tokenId) public view returns (InstallationIdIO[] memory bals_) {
     uint256 count = s.nftInstallations[_tokenContract][_tokenId].length;
     bals_ = new InstallationIdIO[](count);
     for (uint256 i; i < count; i++) {
@@ -104,6 +104,55 @@ contract InstallationFacet is Modifiers {
     returns (ItemTypeIO[] memory installationBalancesOfTokenWithTypes_)
   {
     installationBalancesOfTokenWithTypes_ = ERC998.itemBalancesOfTokenWithTypes(_tokenContract, _tokenId);
+  }
+
+  function getReservoirIds(uint256 _alchemicaType) external pure returns (uint256[] memory) {
+    uint8[9] memory fudReservoirIds = [46, 47, 48, 49, 50, 51, 52, 53, 54];
+    uint8[9] memory fomoReservoirIds = [55, 56, 57, 58, 59, 60, 61, 62, 63];
+    uint8[9] memory alphaReservoirIds = [64, 65, 66, 67, 68, 69, 70, 71, 72];
+    uint8[9] memory kekReservoirIds = [73, 74, 75, 76, 77, 78, 79, 80, 81];
+
+    if (_alchemicaType == 0) return castToUint256Array(fudReservoirIds);
+    else if (_alchemicaType == 1) return castToUint256Array(fomoReservoirIds);
+    else if (_alchemicaType == 2) return castToUint256Array(alphaReservoirIds);
+    else return castToUint256Array(kekReservoirIds);
+  }
+
+  function castToUint256Array(uint8[9] memory _ids) internal pure returns (uint256[] memory) {
+    uint256[] memory array = new uint256[](_ids.length);
+    for (uint256 index = 0; index < _ids.length; index++) {
+      uint8 id = _ids[index];
+      array[index] = id;
+    }
+    return array;
+  }
+
+  function spilloverRatesOfIds(uint256[] calldata _ids) external view returns (uint256[] memory) {
+    uint256[] memory rates = new uint256[](_ids.length);
+    for (uint256 i = 0; i < _ids.length; i++) {
+      rates[i] = s.installationTypes[i].spillPercentage;
+    }
+    return rates;
+  }
+
+  function spilloverRadiusOfIds(uint256[] calldata _ids) external view returns (uint256[] memory) {
+    uint256[] memory rates = new uint256[](_ids.length);
+    for (uint256 i = 0; i < _ids.length; i++) {
+      rates[i] = s.installationTypes[i].spillRadius;
+    }
+    return rates;
+  }
+
+  function installationBalancesOfTokenByIds(
+    address _tokenContract,
+    uint256 _tokenId,
+    uint256[] calldata _ids
+  ) external view returns (uint256[] memory) {
+    uint256[] memory balances = new uint256[](_ids.length);
+    for (uint256 i = 0; i < _ids.length; i++) {
+      balances[i] = balanceOfToken(_tokenContract, _tokenId, _ids[i]);
+    }
+    return balances;
   }
 
   /**
@@ -220,7 +269,25 @@ contract InstallationFacet is Modifiers {
     uint256 _realmId,
     uint256 _installationId
   ) external onlyRealmDiamond {
-    LibInstallation._equipInstallation(_owner, _realmId, _installationId);
+    uint256[] memory prerequisites = s.installationTypes[_installationId].prerequisites;
+
+    bool techTreePasses = false;
+    for (uint256 i = 0; i < prerequisites.length; i++) {
+      //@todo: Check prerequisites
+      //ensure that this installation already has at least one required installation on it before adding
+      uint256 prerequisiteId = prerequisites[i];
+      uint256 equippedBalance = balanceOfToken(s.realmDiamond, _realmId, prerequisiteId);
+      if (equippedBalance > 0) {
+        techTreePasses = true;
+      } else {
+        techTreePasses = false;
+        break;
+      }
+    }
+
+    if (techTreePasses) {
+      LibInstallation._equipInstallation(_owner, _realmId, _installationId);
+    } else revert("InstallationFacet: Tech Tree reqs not met");
   }
 
   function unequipInstallation(
@@ -228,6 +295,27 @@ contract InstallationFacet is Modifiers {
     uint256 _realmId,
     uint256 _installationId
   ) external onlyRealmDiamond {
+    //@todo: Check prerequisites
+    InstallationIdIO[] memory installationBalances = installationBalancesOfToken(s.realmDiamond, _realmId);
+
+    uint256 removeInstallationBalance = balanceOfToken(s.realmDiamond, _realmId, _installationId);
+
+    //Iterate through all equipped installationTypes to check if installation to be unequipped is a prerequisite of any
+    for (uint256 i = 0; i < installationBalances.length; i++) {
+      uint256 installationId = installationBalances[i].installationId;
+
+      uint256[] memory prerequisites = s.installationTypes[installationId].prerequisites;
+
+      for (uint256 j = 0; j < prerequisites.length; j++) {
+        //Check that this installation is not the prequisite for any other currently equipped installations
+        uint256 prerequisiteId = prerequisites[j];
+
+        if (prerequisiteId == installationId && removeInstallationBalance < 2) {
+          revert("InstallationFacet: Tech Tree Reqs not met");
+        }
+      }
+    }
+
     LibInstallation._unequipInstallation(_owner, _realmId, _installationId);
   }
 
@@ -324,7 +412,8 @@ contract InstallationFacet is Modifiers {
           _installationTypes[i].capacity,
           _installationTypes[i].spillRadius,
           _installationTypes[i].spillPercentage,
-          _installationTypes[i].craftTime
+          _installationTypes[i].craftTime,
+          _installationTypes[i].prerequisites
         )
       );
     }
