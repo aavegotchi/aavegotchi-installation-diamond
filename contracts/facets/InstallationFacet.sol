@@ -130,7 +130,7 @@ contract InstallationFacet is Modifiers {
   function spilloverRatesOfIds(uint256[] calldata _ids) external view returns (uint256[] memory) {
     uint256[] memory rates = new uint256[](_ids.length);
     for (uint256 i = 0; i < _ids.length; i++) {
-      rates[i] = s.installationTypes[i].spillPercentage;
+      rates[i] = s.installationTypes[i].spillRate;
     }
     return rates;
   }
@@ -411,7 +411,7 @@ contract InstallationFacet is Modifiers {
           _installationTypes[i].harvestRate,
           _installationTypes[i].capacity,
           _installationTypes[i].spillRadius,
-          _installationTypes[i].spillPercentage,
+          _installationTypes[i].spillRate,
           _installationTypes[i].craftTime,
           _installationTypes[i].prerequisites
         )

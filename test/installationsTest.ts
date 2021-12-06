@@ -56,7 +56,7 @@ describe("Installations tests", async function () {
       harvestRate: 2,
       capacity: 0,
       spillRadius: 0,
-      spillPercentage: 0,
+      spillRate: 0,
       craftTime: 10000,
     });
     installations.push({
@@ -69,7 +69,7 @@ describe("Installations tests", async function () {
       harvestRate: 0,
       capacity: 50000,
       spillRadius: 100,
-      spillPercentage: 100,
+      spillRate: 100,
       craftTime: 50000,
     });
     await installationFacet.addInstallationTypes(installations);

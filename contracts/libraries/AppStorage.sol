@@ -12,7 +12,7 @@ struct InstallationType {
   uint256 harvestRate;
   uint256 capacity;
   uint256 spillRadius;
-  uint256 spillPercentage;
+  uint256 spillRate;
   uint256 craftTime; // in blocks
   uint256[] prerequisites; //IDs of installations that must be present before this installation can be added
 }
