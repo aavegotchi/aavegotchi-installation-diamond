@@ -24,6 +24,7 @@ task(
   for (const file of files) {
     let jsonFile = file.replace("sol", "json");
     if (jsonFile === "AppStorage.json") jsonFile = "Modifiers.json";
+    if (jsonFile === "LibERC998.json") jsonFile = "ERC998.json";
     let json = fs.readFileSync(
       `./artifacts/${libraryBasePath}${file}/${jsonFile}`
     );
@@ -34,6 +35,7 @@ task(
   for (const file of files) {
     let jsonFile = file.replace("sol", "json");
     if (jsonFile === "AppStorage.json") jsonFile = "Modifiers.json";
+    if (jsonFile === "LibERC998.json") jsonFile = "ERC998.json";
     let json = fs.readFileSync(
       `./artifacts${sharedLibraryBasePath}${file}/${jsonFile}`
     );

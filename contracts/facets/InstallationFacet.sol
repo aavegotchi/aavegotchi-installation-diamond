@@ -284,15 +284,13 @@ contract InstallationFacet is Modifiers {
   ) external onlyRealmDiamond {
     uint256[] memory prerequisites = s.installationTypes[_installationId].prerequisites;
 
-    bool techTreePasses = false;
+    bool techTreePasses = true;
     for (uint256 i = 0; i < prerequisites.length; i++) {
       //@todo: Check prerequisites
       //ensure that this installation already has at least one required installation on it before adding
       uint256 prerequisiteId = prerequisites[i];
       uint256 equippedBalance = balanceOfToken(s.realmDiamond, _realmId, prerequisiteId);
-      if (equippedBalance > 0) {
-        techTreePasses = true;
-      } else {
+      if (equippedBalance == 0) {
         techTreePasses = false;
         break;
       }
