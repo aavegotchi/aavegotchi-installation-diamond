@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { InstallationFacet } from "../typechain";
 
 export async function setAddresses() {
-  const diamondAddress = "0x6Ead866C75B485d4d1c123dc51eb6f749a02C797";
+  const diamondAddress = "0x071f9431276F63aaA14b759Bd41143Cb1654AB93";
   const installationFacet = (await ethers.getContractAt(
     "InstallationFacet",
     diamondAddress
