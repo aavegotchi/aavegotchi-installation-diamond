@@ -118,6 +118,11 @@ contract InstallationFacet is Modifiers {
     else return castToUint256Array(kekReservoirIds);
   }
 
+  function getAltarIds() external pure returns (uint256[] memory) {
+    uint8[9] memory altarIds = [1, 2, 3, 4, 5, 6, 7, 8, 9];
+    return castToUint256Array(altarIds);
+  }
+
   function castToUint256Array(uint8[9] memory _ids) internal pure returns (uint256[] memory) {
     uint256[] memory array = new uint256[](_ids.length);
     for (uint256 index = 0; index < _ids.length; index++) {
@@ -125,6 +130,14 @@ contract InstallationFacet is Modifiers {
       array[index] = id;
     }
     return array;
+  }
+
+  function spilloverRateOfId(uint256 _id) external view returns (uint256) {
+    return s.installationTypes[_id].spillRate;
+  }
+
+  function spilloverRadiusOfId(uint256 _id) external view returns (uint256) {
+    return s.installationTypes[_id].spillRadius;
   }
 
   function spilloverRatesOfIds(uint256[] calldata _ids) external view returns (uint256[] memory) {
