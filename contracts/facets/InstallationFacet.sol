@@ -106,18 +106,6 @@ contract InstallationFacet is Modifiers {
     installationBalancesOfTokenWithTypes_ = ERC998.itemBalancesOfTokenWithTypes(_tokenContract, _tokenId);
   }
 
-  function getReservoirIds(uint256 _alchemicaType) external pure returns (uint256[] memory) {
-    uint8[9] memory fudReservoirIds = [46, 47, 48, 49, 50, 51, 52, 53, 54];
-    uint8[9] memory fomoReservoirIds = [55, 56, 57, 58, 59, 60, 61, 62, 63];
-    uint8[9] memory alphaReservoirIds = [64, 65, 66, 67, 68, 69, 70, 71, 72];
-    uint8[9] memory kekReservoirIds = [73, 74, 75, 76, 77, 78, 79, 80, 81];
-
-    if (_alchemicaType == 0) return castToUint256Array(fudReservoirIds);
-    else if (_alchemicaType == 1) return castToUint256Array(fomoReservoirIds);
-    else if (_alchemicaType == 2) return castToUint256Array(alphaReservoirIds);
-    else return castToUint256Array(kekReservoirIds);
-  }
-
   function getAltarIds() external pure returns (uint256[] memory) {
     uint8[9] memory altarIds = [1, 2, 3, 4, 5, 6, 7, 8, 9];
     return castToUint256Array(altarIds);
