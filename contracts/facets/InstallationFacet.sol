@@ -103,6 +103,55 @@ contract InstallationFacet is Modifiers {
     installationBalancesOfTokenWithTypes_ = ERC998.itemBalancesOfTokenWithTypes(_tokenContract, _tokenId);
   }
 
+  function getReservoirIds(uint256 _alchemicaType) external pure returns (uint256[] memory) {
+    uint8[9] memory fudReservoirIds = [46, 47, 48, 49, 50, 51, 52, 53, 54];
+    uint8[9] memory fomoReservoirIds = [55, 56, 57, 58, 59, 60, 61, 62, 63];
+    uint8[9] memory alphaReservoirIds = [64, 65, 66, 67, 68, 69, 70, 71, 72];
+    uint8[9] memory kekReservoirIds = [73, 74, 75, 76, 77, 78, 79, 80, 81];
+
+    if (_alchemicaType == 0) return castToUint256Array(fudReservoirIds);
+    else if (_alchemicaType == 1) return castToUint256Array(fomoReservoirIds);
+    else if (_alchemicaType == 2) return castToUint256Array(alphaReservoirIds);
+    else return castToUint256Array(kekReservoirIds);
+  }
+
+  function castToUint256Array(uint8[9] memory _ids) internal pure returns (uint256[] memory) {
+    uint256[] memory array = new uint256[](_ids.length);
+    for (uint256 index = 0; index < _ids.length; index++) {
+      uint8 id = _ids[index];
+      array[index] = id;
+    }
+    return array;
+  }
+
+  function spilloverRatesOfIds(uint256[] calldata _ids) external view returns (uint256[] memory) {
+    uint256[] memory rates = new uint256[](_ids.length);
+    for (uint256 i = 0; i < _ids.length; i++) {
+      rates[i] = s.installationTypes[i].spillPercentage;
+    }
+    return rates;
+  }
+
+  function spilloverRadiusOfIds(uint256[] calldata _ids) external view returns (uint256[] memory) {
+    uint256[] memory rates = new uint256[](_ids.length);
+    for (uint256 i = 0; i < _ids.length; i++) {
+      rates[i] = s.installationTypes[i].spillRadius;
+    }
+    return rates;
+  }
+
+  function installationBalancesOfTokenByIds(
+    address _tokenContract,
+    uint256 _tokenId,
+    uint256[] calldata _ids
+  ) external view returns (uint256[] memory) {
+    uint256[] memory balances = new uint256[](_ids.length);
+    for (uint256 i = 0; i < _ids.length; i++) {
+      balances[i] = balanceOfToken(_tokenContract, _tokenId, _ids[i]);
+    }
+    return balances;
+  }
+
   /**
         @notice Get the balance of multiple account/token pairs
         @param _owners The addresses of the token holders
@@ -300,7 +349,7 @@ contract InstallationFacet is Modifiers {
     for (uint16 i = 0; i < _installationTypes.length; i++) {
       s.installationTypes.push(
         InstallationType(
-          _installationTypes[i].installationType,
+          // _installationTypes[i].installationType,
           _installationTypes[i].level,
           _installationTypes[i].width,
           _installationTypes[i].height,
