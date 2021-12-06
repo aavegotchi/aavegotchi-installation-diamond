@@ -349,7 +349,7 @@ contract InstallationFacet is Modifiers {
     for (uint16 i = 0; i < _installationTypes.length; i++) {
       s.installationTypes.push(
         InstallationType(
-          // _installationTypes[i].installationType,
+          _installationTypes[i].installationType,
           _installationTypes[i].level,
           _installationTypes[i].width,
           _installationTypes[i].height,

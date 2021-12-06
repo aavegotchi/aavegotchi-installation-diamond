@@ -3,7 +3,7 @@ pragma solidity 0.8.9;
 import {LibDiamond} from "./LibDiamond.sol";
 
 struct InstallationType {
-  // uint16 installationType; //0 = harvester, 1 = reservoir, 2 = altar, 3 = gotchi lodge
+  uint16 installationType; //0 = harvester, 1 = reservoir, 2 = altar, 3 = gotchi lodge
   uint16 level;
   uint256 width;
   uint256 height;
