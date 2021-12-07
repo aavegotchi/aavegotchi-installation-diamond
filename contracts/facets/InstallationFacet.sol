@@ -264,6 +264,9 @@ contract InstallationFacet is Modifiers {
 
       // mint installation
       LibERC1155._safeMint(msg.sender, queueItem.installationType, queueItem.id);
+      // remove installation from queue array
+      s.craftQueue[queueId] = s.craftQueue[s.craftQueue.length - 1];
+      s.craftQueue.pop();
       emit QueueClaimed(queueId);
     }
   }
@@ -442,8 +445,4 @@ contract InstallationFacet is Modifiers {
   function editInstallationType(uint256 _typeId, InstallationType calldata _installationType) external onlyOwner {
     s.installationTypes[_typeId] = _installationType;
   }
-
-  // add alchemica allowance at once
-  // add get function for installations with coordinates on realm diamond
-  // pop from craftqueue on claim
 }
