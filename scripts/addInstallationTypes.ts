@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { InstallationFacet } from "../typechain";
 
 export async function setAddresses() {
-  const diamondAddress = "0x071f9431276F63aaA14b759Bd41143Cb1654AB93";
+  const diamondAddress = "0xaB1c2D1894a41699a4eb758a8Ee57358e70cdba9";
   const installationFacet = (await ethers.getContractAt(
     "InstallationFacet",
     diamondAddress
@@ -50,7 +50,7 @@ export async function setAddresses() {
     capacity: 0,
     spillRadius: 0,
     spillRate: 0,
-    craftTime: 10000,
+    craftTime: 1,
     prerequisites: [],
   });
   altar.push({
@@ -69,7 +69,7 @@ export async function setAddresses() {
     capacity: 0,
     spillRadius: 0,
     spillRate: 0,
-    craftTime: 10000,
+    craftTime: 10,
     prerequisites: [1],
   });
   altar.push({
@@ -88,7 +88,7 @@ export async function setAddresses() {
     capacity: 0,
     spillRadius: 0,
     spillRate: 0,
-    craftTime: 10000,
+    craftTime: 20,
     prerequisites: [2],
   });
   altar.push({
@@ -216,7 +216,7 @@ export async function setAddresses() {
     capacity: 0,
     spillRadius: 0,
     spillRate: 0,
-    craftTime: 20000,
+    craftTime: 5,
     prerequisites: [1],
   });
   fudharv.push({
@@ -230,7 +230,7 @@ export async function setAddresses() {
     capacity: 0,
     spillRadius: 0,
     spillRate: 0,
-    craftTime: 20000,
+    craftTime: 50,
     prerequisites: [2],
   });
   fudharv.push({
@@ -244,7 +244,7 @@ export async function setAddresses() {
     capacity: 0,
     spillRadius: 0,
     spillRate: 0,
-    craftTime: 20000,
+    craftTime: 100,
     prerequisites: [3],
   });
   fudharv.push({
@@ -342,7 +342,7 @@ export async function setAddresses() {
     capacity: 0,
     spillRadius: 0,
     spillRate: 0,
-    craftTime: 20000,
+    craftTime: 10,
     prerequisites: [1],
   });
   fomoharv.push({
@@ -356,7 +356,7 @@ export async function setAddresses() {
     capacity: 0,
     spillRadius: 0,
     spillRate: 0,
-    craftTime: 20000,
+    craftTime: 50,
     prerequisites: [2],
   });
   fomoharv.push({
@@ -370,7 +370,7 @@ export async function setAddresses() {
     capacity: 0,
     spillRadius: 0,
     spillRate: 0,
-    craftTime: 20000,
+    craftTime: 100,
     prerequisites: [3],
   });
   fomoharv.push({
@@ -720,7 +720,7 @@ export async function setAddresses() {
     capacity: ethers.utils.parseUnits("1000"),
     spillRadius: ethers.utils.parseUnits("100"),
     spillRate: ethers.utils.parseUnits("50"),
-    craftTime: 20000,
+    craftTime: 3,
     prerequisites: [1],
   });
   fudres.push({
@@ -734,7 +734,7 @@ export async function setAddresses() {
     capacity: ethers.utils.parseUnits("2000"),
     spillRadius: ethers.utils.parseUnits("90"),
     spillRate: ethers.utils.parseUnits("45"),
-    craftTime: 20000,
+    craftTime: 30,
     prerequisites: [2],
   });
   fudres.push({
@@ -748,7 +748,7 @@ export async function setAddresses() {
     capacity: ethers.utils.parseUnits("3000"),
     spillRadius: ethers.utils.parseUnits("80"),
     spillRate: ethers.utils.parseUnits("40"),
-    craftTime: 20000,
+    craftTime: 60,
     prerequisites: [3],
   });
   fudres.push({
@@ -846,7 +846,7 @@ export async function setAddresses() {
     capacity: ethers.utils.parseUnits("1000"),
     spillRadius: ethers.utils.parseUnits("100"),
     spillRate: ethers.utils.parseUnits("50"),
-    craftTime: 20000,
+    craftTime: 1,
     prerequisites: [1],
   });
   fomores.push({
@@ -860,7 +860,7 @@ export async function setAddresses() {
     capacity: ethers.utils.parseUnits("2000"),
     spillRadius: ethers.utils.parseUnits("90"),
     spillRate: ethers.utils.parseUnits("45"),
-    craftTime: 20000,
+    craftTime: 2,
     prerequisites: [2],
   });
   fomores.push({
@@ -874,7 +874,7 @@ export async function setAddresses() {
     capacity: ethers.utils.parseUnits("3000"),
     spillRadius: ethers.utils.parseUnits("80"),
     spillRate: ethers.utils.parseUnits("40"),
-    craftTime: 20000,
+    craftTime: 3,
     prerequisites: [3],
   });
   fomores.push({
@@ -888,7 +888,7 @@ export async function setAddresses() {
     capacity: ethers.utils.parseUnits("4000"),
     spillRadius: ethers.utils.parseUnits("70"),
     spillRate: ethers.utils.parseUnits("35"),
-    craftTime: 20000,
+    craftTime: 4,
     prerequisites: [4],
   });
   fomores.push({
@@ -902,7 +902,7 @@ export async function setAddresses() {
     capacity: ethers.utils.parseUnits("5000"),
     spillRadius: ethers.utils.parseUnits("60"),
     spillRate: ethers.utils.parseUnits("30"),
-    craftTime: 20000,
+    craftTime: 5,
     prerequisites: [5],
   });
   fomores.push({
@@ -916,7 +916,7 @@ export async function setAddresses() {
     capacity: ethers.utils.parseUnits("6000"),
     spillRadius: ethers.utils.parseUnits("50"),
     spillRate: ethers.utils.parseUnits("25"),
-    craftTime: 20000,
+    craftTime: 6,
     prerequisites: [6],
   });
   fomores.push({
@@ -930,7 +930,7 @@ export async function setAddresses() {
     capacity: ethers.utils.parseUnits("7000"),
     spillRadius: ethers.utils.parseUnits("40"),
     spillRate: ethers.utils.parseUnits("20"),
-    craftTime: 20000,
+    craftTime: 7,
     prerequisites: [7],
   });
   fomores.push({
@@ -944,7 +944,7 @@ export async function setAddresses() {
     capacity: ethers.utils.parseUnits("8000"),
     spillRadius: ethers.utils.parseUnits("30"),
     spillRate: ethers.utils.parseUnits("15"),
-    craftTime: 20000,
+    craftTime: 8,
     prerequisites: [8],
   });
   fomores.push({
@@ -958,7 +958,7 @@ export async function setAddresses() {
     capacity: ethers.utils.parseUnits("9000"),
     spillRadius: ethers.utils.parseUnits("20"),
     spillRate: ethers.utils.parseUnits("10"),
-    craftTime: 20000,
+    craftTime: 9,
     prerequisites: [9],
   });
   alphares.push({

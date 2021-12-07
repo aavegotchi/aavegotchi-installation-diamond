@@ -430,5 +430,19 @@ contract InstallationFacet is Modifiers {
     }
   }
 
-  // TODO function updateInstallationType(Installation memory _updatedInstallation) external onlyOwner {}
+  function eraseInstallationTypes() external onlyOwner {
+    for (uint256 i; i < s.installationTypes.length; i++) {
+      delete s.installationTypes[i];
+    }
+  }
+
+  function editInstallationType(uint256 _typeId, InstallationType calldata _installationType) external onlyOwner {
+    s.installationTypes[_typeId] = _installationType;
+  }
+
+  // add edit insteallationtype
+  // ad alchemica allowance
+  // add get queue craft/upgrade
+  // add event finalizeUpgrade
+  // add get function for installations with coordinates on realm diamond
 }
