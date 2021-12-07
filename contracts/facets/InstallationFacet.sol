@@ -11,6 +11,7 @@ import {LibERC20} from "../libraries/LibERC20.sol";
 import {LibInstallation} from "../libraries/LibInstallation.sol";
 import {IERC721} from "../interfaces/IERC721.sol";
 import {RealmDiamond} from "../interfaces/RealmDiamond.sol";
+import {IERC20} from "../interfaces/IERC20.sol";
 
 contract InstallationFacet is Modifiers {
   event AddedToQueue(uint256 indexed _queueId, uint256 indexed _installationType, uint256 _readyBlock, address _sender);
@@ -373,6 +374,16 @@ contract InstallationFacet is Modifiers {
     }
   }
 
+  function getCraftQueue() external view returns (QueueItem[] memory output_) {
+    uint256 counter;
+    for (uint256 i; i < s.craftQueue.length; i++) {
+      if (s.craftQueue[i].owner == msg.sender) {
+        output_[counter] = s.craftQueue[i];
+        counter++;
+      }
+    }
+  }
+
   /***********************************|
    |             Owner Functions        |
    |__________________________________*/
@@ -428,9 +439,8 @@ contract InstallationFacet is Modifiers {
     s.installationTypes[_typeId] = _installationType;
   }
 
-  // add edit insteallationtype
-  // ad alchemica allowance
-  // add get queue craft/upgrade
+  // add alchemica allowance at once
   // add event finalizeUpgrade
   // add get function for installations with coordinates on realm diamond
+  // pop from craftqueue on claim
 }
