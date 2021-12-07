@@ -22,6 +22,8 @@ contract InstallationFacet is Modifiers {
 
   event UpgradeInitiated(uint256 _parcelId, uint256 _coordinateX, uint256 _coordinateY, uint256 blockInitiated, uint256 readyBlock);
 
+  event UpgradeFinalized(uint256 _parcelId, uint256 _coordinateX, uint256 _coordinateY);
+
   /***********************************|
    |             Read Functions         |
    |__________________________________*/
@@ -369,6 +371,8 @@ contract InstallationFacet is Modifiers {
         s.upgradeQueue[index] = s.upgradeQueue[s.upgradeQueue.length - 1];
         s.upgradeQueue.pop();
         counter--;
+
+        emit UpgradeFinalized(queueUpgrade.parcelId, queueUpgrade.coordinateX, queueUpgrade.coordinateY);
       }
       if (counter == 0) break;
     }
@@ -440,7 +444,6 @@ contract InstallationFacet is Modifiers {
   }
 
   // add alchemica allowance at once
-  // add event finalizeUpgrade
   // add get function for installations with coordinates on realm diamond
   // pop from craftqueue on claim
 }
