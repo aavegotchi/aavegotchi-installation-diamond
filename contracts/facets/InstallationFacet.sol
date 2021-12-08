@@ -14,15 +14,17 @@ import {RealmDiamond} from "../interfaces/RealmDiamond.sol";
 import {IERC20} from "../interfaces/IERC20.sol";
 
 contract InstallationFacet is Modifiers {
-  event AddedToQueue(uint256 indexed _queueId, uint256 indexed _installationType, uint256 _readyBlock, address _sender);
+  event AddedToQueue(uint256 indexed _queueId, uint256 indexed _installationId, uint256 _readyBlock, address _sender);
 
   event QueueClaimed(uint256 indexed _queueId);
 
-  event CraftTimeReduced(uint256 indexed _queueId, uint256 _blocks);
+  event CraftTimeReduced(uint256 indexed _queueId, uint256 _blocksReduced);
 
-  event UpgradeInitiated(uint256 _parcelId, uint256 _coordinateX, uint256 _coordinateY, uint256 blockInitiated, uint256 readyBlock);
+  event UpgradeTimeReduced(uint256 indexed _queueId, uint256 indexed _parcelId, uint256 _coordinateX, uint256 _coordinateY, uint256 _blocksReduced);
 
-  event UpgradeFinalized(uint256 _parcelId, uint256 _coordinateX, uint256 _coordinateY);
+  event UpgradeInitiated(uint256 indexed _parcelId, uint256 _coordinateX, uint256 _coordinateY, uint256 blockInitiated, uint256 readyBlock);
+
+  event UpgradeFinalized(uint256 indexed _parcelId, uint256 _coordinateX, uint256 _coordinateY);
 
   /***********************************|
    |             Read Functions         |
@@ -245,8 +247,9 @@ contract InstallationFacet is Modifiers {
 
       require(block.number <= queueItem.readyBlock, "InstallationFacet: installation already done");
 
-      //todo: check user has enough GLMR
-      //todo: burn GLMR tokens
+      IERC20 glmr = IERC20(s.glmr);
+      require(glmr.balanceOf(msg.sender) >= _amounts[i], "InstallationFacet: not enough GLMR");
+      glmr.burnFrom(msg.sender, _amounts[i]);
 
       queueItem.readyBlock -= _amounts[i];
       emit CraftTimeReduced(queueId, _amounts[i]);
@@ -280,7 +283,6 @@ contract InstallationFacet is Modifiers {
 
     bool techTreePasses = true;
     for (uint256 i = 0; i < prerequisites.length; i++) {
-      //@todo: Check prerequisites
       //ensure that this installation already has at least one required installation on it before adding
       uint256 prerequisiteId = prerequisites[i];
       uint256 equippedBalance = balanceOfToken(s.realmDiamond, _realmId, prerequisiteId);
@@ -300,7 +302,6 @@ contract InstallationFacet is Modifiers {
     uint256 _realmId,
     uint256 _installationId
   ) external onlyRealmDiamond {
-    //@todo: Check prerequisites
     InstallationIdIO[] memory installationBalances = installationBalancesOfToken(s.realmDiamond, _realmId);
 
     uint256 removeInstallationBalance = balanceOfToken(s.realmDiamond, _realmId, _installationId);
@@ -354,6 +355,20 @@ contract InstallationFacet is Modifiers {
     emit UpgradeInitiated(_upgradeQueue.parcelId, _upgradeQueue.coordinateX, _upgradeQueue.coordinateY, block.number, readyBlock);
   }
 
+  function reduceUpgradeTime(uint256 _queueId, uint256 _amount) external {
+    UpgradeQueue storage upgradeQueue = s.upgradeQueue[_queueId];
+    require(msg.sender == upgradeQueue.owner, "InstallationFacet: not owner");
+
+    require(block.number <= upgradeQueue.readyBlock, "InstallationFacet: upgrade already done");
+
+    IERC20 glmr = IERC20(s.glmr);
+    require(glmr.balanceOf(msg.sender) >= _amount, "InstallationFacet: not enough GLMR");
+    glmr.burnFrom(msg.sender, _amount);
+
+    upgradeQueue.readyBlock -= _amount;
+    emit UpgradeTimeReduced(_queueId, upgradeQueue.parcelId, upgradeQueue.coordinateX, upgradeQueue.coordinateY, _amount);
+  }
+
   function finalizeUpgrade() public {
     uint8 counter = 3;
     for (uint256 index; index < s.upgradeQueue.length; index++) {
@@ -370,7 +385,6 @@ contract InstallationFacet is Modifiers {
         RealmDiamond realm = RealmDiamond(s.realmDiamond);
         realm.upgradeInstallation(queueUpgrade.parcelId, queueUpgrade.prevInstallationId, queueUpgrade.nextInstallationId);
         // pop upgrade from array
-        // todo evaluate if there is a better solution for removing the element
         s.upgradeQueue[index] = s.upgradeQueue[s.upgradeQueue.length - 1];
         s.upgradeQueue.pop();
         counter--;
@@ -410,9 +424,14 @@ contract InstallationFacet is Modifiers {
     s.alchemicaAddresses = _addresses;
   }
 
-  function setDiamondsAddresses(address _aavegotchiDiamond, address _realmDiamond) external onlyOwner {
+  function setAddresses(
+    address _aavegotchiDiamond,
+    address _realmDiamond,
+    address _glmr
+  ) external onlyOwner {
     s.aavegotchiDiamond = _aavegotchiDiamond;
     s.realmDiamond = _realmDiamond;
+    s.glmr = _glmr;
   }
 
   function addInstallationTypes(InstallationType[] calldata _installationTypes) external onlyOwner {
