@@ -2,7 +2,7 @@ import { ethers } from "hardhat";
 import { InstallationFacet } from "../typechain";
 
 export async function setAddresses() {
-  const diamondAddress = "0xaB1c2D1894a41699a4eb758a8Ee57358e70cdba9";
+  const diamondAddress = "0xe927518d25ef44EA33b12AFF524AC236e064C35c";
   const installationFacet = (await ethers.getContractAt(
     "InstallationFacet",
     diamondAddress
@@ -10,17 +10,18 @@ export async function setAddresses() {
 
   await installationFacet.setAlchemicaAddresses(
     [
-      "0x9Fee2dbFceB39103F9cA732A38531BDcd14F7ED7",
-      "0x5a2347fb5dd05c9F05474108B3a77e511D977dBb",
-      "0x7Fe83e7E44cFDA7BBA8abd7F93a11A607470668d",
-      "0x06975058C9701f1626c152f61De8348D5CFdd837",
+      "0xb70fb5e238a84C939e26985926B4CF0Dc8450AA4",
+      "0x95d36E62F5F2Eb8bA96664FFC5b9CF469C53e26E",
+      "0xe1FFaBb85FaB1F05574a3af824312022886A524f",
+      "0xDD3218f01b2b9ee1b10C2F18F06b4c6226F86E43",
     ],
     { gasPrice: ethers.utils.parseUnits("200", "gwei") }
   );
 
-  await installationFacet.setDiamondsAddresses(
+  await installationFacet.setAddresses(
     "0x705F32B7D678eE71085ed11ddcba7378367f1582",
-    "0xCDe6B59B6AcBbdBf5D6Ef4c291481feCA70cf1aa",
+    "0xbb5Ded610965118240EeE51d65f57BFFa4a7Fcdd",
+    "0x0000000000000000000000000000000000000000",
     { gasPrice: ethers.utils.parseUnits("200", "gwei") }
   );
 }
