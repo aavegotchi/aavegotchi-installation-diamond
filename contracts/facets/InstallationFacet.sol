@@ -226,13 +226,17 @@ contract InstallationFacet is Modifiers {
         LibERC20.transferFrom(s.alchemicaAddresses[j], msg.sender, address(this), s.installationTypes[_installationTypes[i]].alchemicaCost[j]);
       }
 
-      uint256 readyBlock = block.number + installationType.craftTime;
+      if(installationType.craftTime == 0) {
+        LibERC1155._safeMint(msg.sender, _installationTypes[i], s.nextCraftId);
+      } else {
+        uint256 readyBlock = block.number + installationType.craftTime;
 
-      //put the installation into a queue
-      //each wearable needs a unique queue id
-      s.craftQueue.push(QueueItem(s.nextCraftId, readyBlock, _installationTypes[i], false, msg.sender));
+        //put the installation into a queue
+        //each wearable needs a unique queue id
+        s.craftQueue.push(QueueItem(s.nextCraftId, readyBlock, _installationTypes[i], false, msg.sender));
 
-      emit AddedToQueue(s.nextCraftId, _installationTypes[i], readyBlock, msg.sender);
+        emit AddedToQueue(s.nextCraftId, _installationTypes[i], readyBlock, msg.sender);
+      }
       s.nextCraftId++;
     }
     //after queue is over, user can claim installation
