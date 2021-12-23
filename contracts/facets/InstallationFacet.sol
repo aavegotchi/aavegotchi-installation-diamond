@@ -228,7 +228,7 @@ contract InstallationFacet is Modifiers {
 
       if(installationType.craftTime == 0) {
         LibERC1155.addToOwner(msg.sender, _installationTypes[i], 1);
-        emit LibERC1155.TransferSingle(address(this), address(0), _to, _installationId, 1);
+        emit LibERC1155.TransferSingle(address(this), address(0), msg.sender, _installationTypes[i], 1);
       } else {
         uint256 readyBlock = block.number + installationType.craftTime;
 
