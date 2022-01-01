@@ -1,4 +1,9 @@
-import { impersonate } from "../scripts/helperFunctions";
+import {
+  impersonate,
+  maticAavegotchiDiamondAddress,
+  maticGhstAddress,
+  maticRealmDiamondAddress,
+} from "../scripts/helperFunctions";
 import { InstallationFacet, ERC1155Facet, IERC20 } from "../typechain";
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
@@ -19,16 +24,18 @@ interface InstallationType {
   spillRate: BigNumberish;
   craftTime: BigNumberish;
   prerequisites: BigNumberish[];
+  nextLevelId: BigNumberish;
 }
 
 describe("Installations tests", async function () {
   const testAddress = "0xf3678737dC45092dBb3fc1f49D89e3950Abb866d";
-  const testAddress2 = "0xC99DF6B7A5130Dce61bA98614A2457DAA8d92d1c";
+  const testAddress2 = "0xC3c2e1Cf099Bc6e1fA94ce358562BCbD5cc59FE5";
   let diamondAddress: string;
   let installationFacet: InstallationFacet;
   let erc1155Facet: ERC1155Facet;
   let ghst: IERC20;
   let accounts: Signer[];
+  const testParcelId = "141";
 
   before(async function () {
     this.timeout(20000000);
@@ -48,15 +55,15 @@ describe("Installations tests", async function () {
 
     ghst = (await ethers.getContractAt(
       "contracts/interfaces/IERC20.sol:IERC20",
-      "0x385eeac5cb85a38a9a07a70c73e0a3271cfb54a7"
+      maticGhstAddress
     )) as IERC20;
   });
   it("Set alchemica addresses", async function () {
     const setAlchemicaAddresses = [
-      "0x385Eeac5cB85A38A9a07A70c73e0a3271CfB54A7",
-      "0x385Eeac5cB85A38A9a07A70c73e0a3271CfB54A7",
-      "0x385Eeac5cB85A38A9a07A70c73e0a3271CfB54A7",
-      "0x385Eeac5cB85A38A9a07A70c73e0a3271CfB54A7",
+      maticGhstAddress,
+      maticGhstAddress,
+      maticGhstAddress,
+      maticGhstAddress,
     ];
     await installationFacet.setAlchemicaAddresses(setAlchemicaAddresses);
     const getAlchemicaAddresses =
@@ -66,9 +73,9 @@ describe("Installations tests", async function () {
 
   it("Set Diamond Addresses", async function () {
     await installationFacet.setAddresses(
-      "0x86935f11c86623dec8a25696e1c19a8659cbf95d",
-      "0x1d0360bac7299c86ec8e99d0c1c9a95fefaf2a11",
-      "0x385Eeac5cB85A38A9a07A70c73e0a3271CfB54A7"
+      maticAavegotchiDiamondAddress,
+      maticRealmDiamondAddress,
+      maticGhstAddress
     );
   });
 
@@ -89,27 +96,49 @@ describe("Installations tests", async function () {
       spillRate: 0,
       craftTime: 10000,
       prerequisites: [],
+      nextLevelId: 2,
     });
+
     installations.push({
       deprecated: false,
-      prerequisites: [],
-      installationType: 1,
+      installationType: 0,
       level: 1,
-      width: 6,
-      height: 6,
-      alchemicaType: 4,
-      alchemicaCost: [4, 5, 6, 0],
-      harvestRate: 0,
-      capacity: 50000,
-      spillRadius: 100,
-      spillRate: 100,
-      craftTime: 50000,
+      width: 2,
+      height: 4,
+      alchemicaType: 0,
+      alchemicaCost: [1, 2, 0, 3],
+      harvestRate: 2,
+      capacity: 0,
+      spillRadius: 0,
+      spillRate: 0,
+      craftTime: 10000,
+      prerequisites: [],
+      nextLevelId: 2,
     });
+
+    installations.push({
+      deprecated: false,
+      installationType: 0,
+      level: 2,
+      width: 2,
+      height: 4,
+      alchemicaType: 0,
+      alchemicaCost: [1, 2, 0, 3],
+      harvestRate: 2,
+      capacity: 0,
+      spillRadius: 0,
+      spillRate: 0,
+      craftTime: 10000,
+      prerequisites: [],
+      nextLevelId: 3,
+    });
+
     await installationFacet.addInstallationTypes(installations);
     installationsTypes = await installationFacet.getInstallationTypes([]);
     expect(installationsTypes.length).to.equal(installations.length);
   });
-  it("Craft installations", async function () {
+
+  it("Craft ID=0 installations with Test Address", async function () {
     ghst = await impersonate(testAddress, ghst, ethers, network);
     installationFacet = await impersonate(
       testAddress,
@@ -128,12 +157,12 @@ describe("Installations tests", async function () {
     for (let i = 0; i < 11000; i++) {
       ethers.provider.send("evm_mine", []);
     }
-    const balancePre = await installationFacet.balanceOf(testAddress, 0);
+    const balancePre = await erc1155Facet.balanceOf(testAddress, 0);
     await installationFacet.claimInstallations([0, 1, 2, 3, 4]);
-    const balancePost = await installationFacet.balanceOf(testAddress, 0);
+    const balancePost = await erc1155Facet.balanceOf(testAddress, 0);
     expect(balancePost).to.above(balancePre);
   });
-  it("Transfer installation", async function () {
+  it("Transfer ID=0 installation from Test address to Test Address 2", async function () {
     erc1155Facet = await impersonate(
       testAddress,
       erc1155Facet,
@@ -141,16 +170,16 @@ describe("Installations tests", async function () {
       network
     );
 
-    const balancePre = await installationFacet.balanceOf(testAddress, 0);
-    const balancePre2 = await installationFacet.balanceOf(testAddress2, 0);
+    const balancePre = await erc1155Facet.balanceOf(testAddress, 0);
+    const balancePre2 = await erc1155Facet.balanceOf(testAddress2, 0);
     expect(balancePre).to.above(balancePre2);
 
     await erc1155Facet.safeTransferFrom(testAddress, testAddress2, 0, 3, []);
-    const balancePost = await installationFacet.balanceOf(testAddress, 0);
-    const balancePost2 = await installationFacet.balanceOf(testAddress2, 0);
+    const balancePost = await erc1155Facet.balanceOf(testAddress, 0);
+    const balancePost2 = await erc1155Facet.balanceOf(testAddress2, 0);
     expect(balancePost2).to.above(balancePost);
   });
-  it("Batch transfer installations", async function () {
+  it("Batch transfer ID=1 installations from test address to test address 2", async function () {
     this.timeout(20000000);
     installationFacet = await impersonate(
       testAddress,
@@ -164,25 +193,25 @@ describe("Installations tests", async function () {
       ethers,
       network
     );
-    await installationFacet.craftInstallations([1, 1, 1]);
+    await installationFacet.craftInstallations([1, 1, 1, 1]);
     for (let i = 0; i < 51000; i++) {
       ethers.provider.send("evm_mine", []);
     }
-    await installationFacet.claimInstallations([5, 6, 7]);
+    await installationFacet.claimInstallations([5, 6, 7, 8]);
     const balancePreHarv = ethers.utils.formatUnits(
-      await installationFacet.balanceOf(testAddress, 0),
+      await erc1155Facet.balanceOf(testAddress, 0),
       0
     );
     const balancePreHarv2 = ethers.utils.formatUnits(
-      await installationFacet.balanceOf(testAddress2, 0),
+      await erc1155Facet.balanceOf(testAddress2, 0),
       0
     );
     const balancePreRes = ethers.utils.formatUnits(
-      await installationFacet.balanceOf(testAddress, 1),
+      await erc1155Facet.balanceOf(testAddress, 1),
       0
     );
     const balancePreRes2 = ethers.utils.formatUnits(
-      await installationFacet.balanceOf(testAddress2, 1),
+      await erc1155Facet.balanceOf(testAddress2, 1),
       0
     );
     await erc1155Facet.safeBatchTransferFrom(
@@ -193,19 +222,19 @@ describe("Installations tests", async function () {
       []
     );
     const balancePostHarv = ethers.utils.formatUnits(
-      await installationFacet.balanceOf(testAddress, 0),
+      await erc1155Facet.balanceOf(testAddress, 0),
       0
     );
     const balancePostHarv2 = ethers.utils.formatUnits(
-      await installationFacet.balanceOf(testAddress2, 0),
+      await erc1155Facet.balanceOf(testAddress2, 0),
       0
     );
     const balancePostRes = ethers.utils.formatUnits(
-      await installationFacet.balanceOf(testAddress, 1),
+      await erc1155Facet.balanceOf(testAddress, 1),
       0
     );
     const balancePostRes2 = ethers.utils.formatUnits(
-      await installationFacet.balanceOf(testAddress2, 1),
+      await erc1155Facet.balanceOf(testAddress2, 1),
       0
     );
     expect(Number(balancePreHarv) + Number(balancePreHarv2)).to.equal(
@@ -214,5 +243,88 @@ describe("Installations tests", async function () {
     expect(Number(balancePreRes) + Number(balancePreRes2)).to.equal(
       Number(balancePostRes) + Number(balancePostRes2)
     );
+  });
+
+  it("Owner can deprecate installation", async function () {
+    installationFacet = await impersonate(
+      await accounts[0].getAddress(),
+      installationFacet,
+      ethers,
+      network
+    );
+
+    await installationFacet.deprecateInstallations(["1"]);
+    await expect(
+      installationFacet.craftInstallations(["1"])
+    ).to.be.revertedWith("InstallationFacet: Installation has been deprecated");
+  });
+
+  it("Equip installation", async function () {
+    installationFacet = await impersonate(
+      maticRealmDiamondAddress,
+      installationFacet,
+      ethers,
+      network
+    );
+
+    await installationFacet.equipInstallation(testAddress2, testParcelId, "0");
+
+    const balances = await installationFacet.installationBalancesOfToken(
+      maticRealmDiamondAddress,
+      testParcelId
+    );
+    expect(balances.length).to.above(0);
+    expect(balances[0].installationId).to.equal(0);
+    expect(balances[0].balance).to.equal(1);
+  });
+
+  it("Upgrade installation", async function () {
+    const parcelOwner = "0xC3c2e1Cf099Bc6e1fA94ce358562BCbD5cc59FE5";
+    installationFacet = await impersonate(
+      parcelOwner,
+      installationFacet,
+      ethers,
+      network
+    );
+
+    await installationFacet.upgradeInstallation({
+      parcelId: testParcelId,
+      coordinateX: 0,
+      coordinateY: 0,
+      installationId: "0",
+      readyBlock: "0", //readyBlock can be 0
+      claimed: false,
+      owner: parcelOwner,
+    });
+  });
+
+  it("Finalize upgrade", async function () {
+    let upgradeQueue = await installationFacet.getUpgradeQueue();
+    expect(upgradeQueue.length).to.equal(1);
+
+    await expect(installationFacet.finalizeUpgrade()).to.be.revertedWith(
+      "InstallationFacet: No upgrades ready"
+    );
+
+    //Complete upgrade
+    for (let i = 0; i < 10001; i++) {
+      ethers.provider.send("evm_mine", []);
+    }
+    await installationFacet.finalizeUpgrade();
+
+    upgradeQueue = await installationFacet.getUpgradeQueue();
+    expect(upgradeQueue.length).to.equal(0);
+
+    await expect(installationFacet.finalizeUpgrade()).to.be.revertedWith(
+      "InstallationFacet: No upgrades"
+    );
+
+    const balances = await installationFacet.installationBalancesOfToken(
+      maticRealmDiamondAddress,
+      testParcelId
+    );
+    expect(balances.length).to.above(0);
+    expect(balances[0].installationId).to.equal(2);
+    expect(balances[0].balance).to.equal(1);
   });
 });

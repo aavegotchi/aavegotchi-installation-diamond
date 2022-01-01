@@ -91,4 +91,41 @@ contract ERC1155Facet is Modifiers {
     s.operators[owner][operator] = approved;
     emit LibERC1155.ApprovalForAll(owner, operator, approved);
   }
+
+  /**
+        @notice Set the base url for all voucher types
+        @param _value The new base url        
+    */
+  function setBaseURI(string memory _value) external onlyOwner {
+    s.baseUri = _value;
+    for (uint256 i; i < s.installationTypes.length; i++) {
+      emit LibERC1155.URI(LibStrings.strWithUint(_value, i), i);
+    }
+  }
+
+  /**
+        @notice Get the balance of an account's tokens.
+        @param _owner  The address of the token holder
+        @param _id     ID of the token
+        @return bal_    The _owner's balance of the token type requested
+     */
+  function balanceOf(address _owner, uint256 _id) external view returns (uint256 bal_) {
+    bal_ = s.ownerInstallationBalances[_owner][_id];
+  }
+
+  /**
+        @notice Get the balance of multiple account/token pairs
+        @param _owners The addresses of the token holders
+        @param _ids    ID of the tokens
+        @return bals   The _owner's balance of the token types requested (i.e. balance for each (owner, id) pair)
+     */
+  function balanceOfBatch(address[] calldata _owners, uint256[] calldata _ids) external view returns (uint256[] memory bals) {
+    require(_owners.length == _ids.length, "InstallationFacet: _owners length not same as _ids length");
+    bals = new uint256[](_owners.length);
+    for (uint256 i; i < _owners.length; i++) {
+      uint256 id = _ids[i];
+      address owner = _owners[i];
+      bals[i] = s.ownerInstallationBalances[owner][id];
+    }
+  }
 }

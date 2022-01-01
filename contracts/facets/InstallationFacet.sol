@@ -64,16 +64,6 @@ contract InstallationFacet is Modifiers {
     }
   }
 
-  /**
-        @notice Get the balance of an account's tokens.
-        @param _owner  The address of the token holder
-        @param _id     ID of the token
-        @return bal_    The _owner's balance of the token type requested
-     */
-  function balanceOf(address _owner, uint256 _id) external view returns (uint256 bal_) {
-    bal_ = s.ownerInstallationBalances[_owner][_id];
-  }
-
   /// @notice Get the balance of a non-fungible parent token
   /// @param _tokenContract The contract tracking the parent token
   /// @param _tokenId The ID of the parent token
@@ -163,22 +153,6 @@ contract InstallationFacet is Modifiers {
     return balances;
   }
 
-  /**
-        @notice Get the balance of multiple account/token pairs
-        @param _owners The addresses of the token holders
-        @param _ids    ID of the tokens
-        @return bals   The _owner's balance of the token types requested (i.e. balance for each (owner, id) pair)
-     */
-  function balanceOfBatch(address[] calldata _owners, uint256[] calldata _ids) external view returns (uint256[] memory bals) {
-    require(_owners.length == _ids.length, "InstallationFacet: _owners length not same as _ids length");
-    bals = new uint256[](_owners.length);
-    for (uint256 i; i < _owners.length; i++) {
-      uint256 id = _ids[i];
-      address owner = _owners[i];
-      bals[i] = s.ownerInstallationBalances[owner][id];
-    }
-  }
-
   ///@notice Query the item type of a particular installation
   ///@param _installationTypeId Item to query
   ///@return installationType A struct containing details about the item type of an item with identifier `_itemId`
@@ -218,10 +192,18 @@ contract InstallationFacet is Modifiers {
    |             Write Functions        |
    |__________________________________*/
 
+  function deprecateInstallations(uint256[] calldata _installationIds) external onlyOwner {
+    for (uint8 i = 0; i < _installationIds.length; i++) {
+      s.installationTypes[_installationIds[i]].deprecated = true;
+    }
+  }
+
   function craftInstallations(uint256[] calldata _installationTypes) external {
     for (uint8 i = 0; i < _installationTypes.length; i++) {
       //level check
       require(s.installationTypes[_installationTypes[i]].level == 1, "InstallationFacet: can only craft level 1");
+
+      require(!s.installationTypes[_installationTypes[i]].deprecated, "InstallationFacet: Installation has been deprecated");
       //take the required alchemica
       InstallationType memory installationType = s.installationTypes[_installationTypes[i]];
       for (uint8 j = 0; j < installationType.alchemicaCost.length; j++) {
@@ -340,21 +322,28 @@ contract InstallationFacet is Modifiers {
     require(parcelOwner == _upgradeQueue.owner, "InstallationFacet: not owner");
     // check coordinates
     RealmDiamond realm = RealmDiamond(s.realmDiamond);
-    realm.checkCoordinates(_upgradeQueue.parcelId, _upgradeQueue.coordinateX, _upgradeQueue.coordinateY, _upgradeQueue.prevInstallationId);
+
+    //todo: remove only for testing
+    // realm.checkCoordinates(_upgradeQueue.parcelId, _upgradeQueue.coordinateX, _upgradeQueue.coordinateY, _upgradeQueue.installationId);
     // check tech tree
-    InstallationType memory prevInstallation = s.installationTypes[_upgradeQueue.prevInstallationId];
-    InstallationType memory nextInstallation = s.installationTypes[_upgradeQueue.nextInstallationId];
+
+    //current installation
+    InstallationType memory prevInstallation = s.installationTypes[_upgradeQueue.installationId];
+
+    require(prevInstallation.nextLevelId > 0, "InstallationFacet: Maximum upgrade reached");
+
+    //next level
+    InstallationType memory nextInstallation = s.installationTypes[prevInstallation.nextLevelId];
     require(prevInstallation.installationType == nextInstallation.installationType, "InstallationFacet: wrong installation type");
     require(prevInstallation.alchemicaType == nextInstallation.alchemicaType, "InstallationFacet: wrong alchemicaType");
-    require(prevInstallation.level == nextInstallation.level - 1, "InstallationFacet: wrong installation level");
+    require(prevInstallation.level == nextInstallation.level - 1, "InstallationFacet: Wrong installation level");
 
     uint256 readyBlock = block.number + nextInstallation.craftTime;
     UpgradeQueue memory upgrade = UpgradeQueue(
       _upgradeQueue.parcelId,
       _upgradeQueue.coordinateX,
       _upgradeQueue.coordinateY,
-      _upgradeQueue.prevInstallationId,
-      _upgradeQueue.nextInstallationId,
+      _upgradeQueue.installationId,
       readyBlock,
       false,
       _upgradeQueue.owner
@@ -366,12 +355,12 @@ contract InstallationFacet is Modifiers {
 
   function reduceUpgradeTime(uint256 _queueId, uint256 _amount) external {
     UpgradeQueue storage upgradeQueue = s.upgradeQueue[_queueId];
-    require(msg.sender == upgradeQueue.owner, "InstallationFacet: not owner");
+    require(msg.sender == upgradeQueue.owner, "InstallationFacet: Not owner");
 
-    require(block.number <= upgradeQueue.readyBlock, "InstallationFacet: upgrade already done");
+    require(block.number <= upgradeQueue.readyBlock, "InstallationFacet: Upgrade already done");
 
     IERC20 glmr = IERC20(s.glmr);
-    require(glmr.balanceOf(msg.sender) >= _amount, "InstallationFacet: not enough GLMR");
+    require(glmr.balanceOf(msg.sender) >= _amount, "InstallationFacet: Not enough GLMR");
     glmr.burnFrom(msg.sender, _amount);
 
     upgradeQueue.readyBlock -= _amount;
@@ -379,20 +368,25 @@ contract InstallationFacet is Modifiers {
   }
 
   function finalizeUpgrade() public {
+    require(s.upgradeQueue.length > 0, "InstallationFacet: No upgrades");
+    //can only process 3 upgrades per tx
     uint8 counter = 3;
     for (uint256 index; index < s.upgradeQueue.length; index++) {
       UpgradeQueue memory queueUpgrade = s.upgradeQueue[index];
       // check that upgrade is ready
       if (block.number >= queueUpgrade.readyBlock) {
         // burn old installation
-        LibInstallation._unequipInstallation(queueUpgrade.owner, queueUpgrade.parcelId, queueUpgrade.prevInstallationId);
+        LibInstallation._unequipInstallation(queueUpgrade.owner, queueUpgrade.parcelId, queueUpgrade.installationId);
         // mint new installation
-        LibERC1155._safeMint(queueUpgrade.owner, queueUpgrade.nextInstallationId, index);
+
+        uint256 nextLevelId = s.installationTypes[queueUpgrade.installationId].nextLevelId;
+        LibERC1155._safeMint(queueUpgrade.owner, nextLevelId, index);
         // equip new installation
-        LibInstallation._equipInstallation(queueUpgrade.owner, queueUpgrade.parcelId, queueUpgrade.nextInstallationId);
-        // update realm diamond
-        RealmDiamond realm = RealmDiamond(s.realmDiamond);
-        realm.upgradeInstallation(queueUpgrade.parcelId, queueUpgrade.prevInstallationId, queueUpgrade.nextInstallationId);
+        LibInstallation._equipInstallation(queueUpgrade.owner, queueUpgrade.parcelId, nextLevelId);
+
+        //@todo: comment out only during local testing
+        // RealmDiamond realm = RealmDiamond(s.realmDiamond);
+        // realm.upgradeInstallation(queueUpgrade.parcelId, queueUpgrade.installationId, nextLevelId);
         // pop upgrade from array
         s.upgradeQueue[index] = s.upgradeQueue[s.upgradeQueue.length - 1];
         s.upgradeQueue.pop();
@@ -401,6 +395,7 @@ contract InstallationFacet is Modifiers {
         emit UpgradeFinalized(queueUpgrade.parcelId, queueUpgrade.coordinateX, queueUpgrade.coordinateY);
       }
       if (counter == 0) break;
+      if (counter == 3) revert("InstallationFacet: No upgrades ready");
     }
   }
 
@@ -414,20 +409,13 @@ contract InstallationFacet is Modifiers {
     }
   }
 
+  function getUpgradeQueue() external view returns (UpgradeQueue[] memory output_) {
+    return s.upgradeQueue;
+  }
+
   /***********************************|
    |             Owner Functions        |
    |__________________________________*/
-
-  /**
-        @notice Set the base url for all voucher types
-        @param _value The new base url        
-    */
-  function setBaseURI(string memory _value) external onlyOwner {
-    s.baseUri = _value;
-    for (uint256 i; i < s.installationTypes.length; i++) {
-      emit LibERC1155.URI(LibStrings.strWithUint(_value, i), i);
-    }
-  }
 
   function setAlchemicaAddresses(address[] memory _addresses) external onlyOwner {
     s.alchemicaAddresses = _addresses;
@@ -459,6 +447,7 @@ contract InstallationFacet is Modifiers {
           _installationTypes[i].spillRadius,
           _installationTypes[i].spillRate,
           _installationTypes[i].craftTime,
+          _installationTypes[i].nextLevelId,
           _installationTypes[i].prerequisites
         )
       );

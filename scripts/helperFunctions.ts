@@ -63,6 +63,13 @@ export const maticDiamondAddress = "";
 export const mumbaiDiamondAddress =
   "0x1B84ADcD1DC7F2890D6e4889232cc349b3517F92";
 
+export const maticRealmDiamondAddress =
+  "0x1d0360bac7299c86ec8e99d0c1c9a95fefaf2a11";
+
+export const maticAavegotchiDiamondAddress =
+  "0x86935f11c86623dec8a25696e1c19a8659cbf95d";
+
+export const maticGhstAddress = "0x385Eeac5cB85A38A9a07A70c73e0a3271CfB54A7";
 export async function diamondOwner(address: string, ethers: any) {
   return await (await ethers.getContractAt("OwnershipFacet", address)).owner();
 }
