@@ -3,6 +3,23 @@ import { InstallationFacet, ERC1155Facet, IERC20 } from "../typechain";
 import { expect } from "chai";
 import { ethers, network } from "hardhat";
 import { deployDiamond } from "../scripts/deploy";
+import { BigNumberish, Signer } from "ethers";
+
+interface InstallationType {
+  deprecated: boolean;
+  installationType: BigNumberish;
+  level: BigNumberish;
+  width: BigNumberish;
+  height: BigNumberish;
+  alchemicaType: BigNumberish;
+  alchemicaCost: BigNumberish[];
+  harvestRate: BigNumberish;
+  capacity: BigNumberish;
+  spillRadius: BigNumberish;
+  spillRate: BigNumberish;
+  craftTime: BigNumberish;
+  prerequisites: BigNumberish[];
+}
 
 describe("Installations tests", async function () {
   const testAddress = "0xf3678737dC45092dBb3fc1f49D89e3950Abb866d";
@@ -10,8 +27,8 @@ describe("Installations tests", async function () {
   let diamondAddress: string;
   let installationFacet: InstallationFacet;
   let erc1155Facet: ERC1155Facet;
-  let accounts;
   let ghst: IERC20;
+  let accounts: Signer[];
 
   before(async function () {
     this.timeout(20000000);
@@ -26,8 +43,11 @@ describe("Installations tests", async function () {
       "ERC1155Facet",
       diamondAddress
     )) as ERC1155Facet;
+
+    console.log("diamond address:", diamondAddress);
+
     ghst = (await ethers.getContractAt(
-      "IERC20",
+      "contracts/interfaces/IERC20.sol:IERC20",
       "0x385eeac5cb85a38a9a07a70c73e0a3271cfb54a7"
     )) as IERC20;
   });
@@ -43,10 +63,20 @@ describe("Installations tests", async function () {
       await installationFacet.getAlchemicaAddresses();
     expect(setAlchemicaAddresses).to.eql(getAlchemicaAddresses);
   });
+
+  it("Set Diamond Addresses", async function () {
+    await installationFacet.setAddresses(
+      "0x86935f11c86623dec8a25696e1c19a8659cbf95d",
+      "0x1d0360bac7299c86ec8e99d0c1c9a95fefaf2a11",
+      "0x385Eeac5cB85A38A9a07A70c73e0a3271CfB54A7"
+    );
+  });
+
   it("Add installation types", async function () {
     let installationsTypes = await installationFacet.getInstallationTypes([]);
-    const installations = [];
+    const installations: InstallationType[] = [];
     installations.push({
+      deprecated: false,
       installationType: 0,
       level: 1,
       width: 2,
@@ -58,8 +88,11 @@ describe("Installations tests", async function () {
       spillRadius: 0,
       spillRate: 0,
       craftTime: 10000,
+      prerequisites: [],
     });
     installations.push({
+      deprecated: false,
+      prerequisites: [],
       installationType: 1,
       level: 1,
       width: 6,
@@ -107,9 +140,11 @@ describe("Installations tests", async function () {
       ethers,
       network
     );
+
     const balancePre = await installationFacet.balanceOf(testAddress, 0);
     const balancePre2 = await installationFacet.balanceOf(testAddress2, 0);
     expect(balancePre).to.above(balancePre2);
+
     await erc1155Facet.safeTransferFrom(testAddress, testAddress2, 0, 3, []);
     const balancePost = await installationFacet.balanceOf(testAddress, 0);
     const balancePost2 = await installationFacet.balanceOf(testAddress2, 0);

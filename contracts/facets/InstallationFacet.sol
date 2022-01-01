@@ -13,6 +13,8 @@ import {IERC721} from "../interfaces/IERC721.sol";
 import {RealmDiamond} from "../interfaces/RealmDiamond.sol";
 import {IERC20} from "../interfaces/IERC20.sol";
 
+import "hardhat/console.sol";
+
 contract InstallationFacet is Modifiers {
   event AddedToQueue(uint256 indexed _queueId, uint256 indexed _installationId, uint256 _readyBlock, address _sender);
 
@@ -223,11 +225,12 @@ contract InstallationFacet is Modifiers {
       //take the required alchemica
       InstallationType memory installationType = s.installationTypes[_installationTypes[i]];
       for (uint8 j = 0; j < installationType.alchemicaCost.length; j++) {
+        //@todo: ensure this reverts if funds are insufficient
         LibERC20.transferFrom(s.alchemicaAddresses[j], msg.sender, address(this), s.installationTypes[_installationTypes[i]].alchemicaCost[j]);
       }
 
-      if(installationType.craftTime == 0) {
-        LibERC1155._safeMint(msg.sender, _installationTypes[i], s.nextCraftId);
+      if (installationType.craftTime == 0) {
+        LibERC1155._safeMint(msg.sender, _installationTypes[i], 0);
       } else {
         uint256 readyBlock = block.number + installationType.craftTime;
 
@@ -235,9 +238,11 @@ contract InstallationFacet is Modifiers {
         //each wearable needs a unique queue id
         s.craftQueue.push(QueueItem(s.nextCraftId, readyBlock, _installationTypes[i], false, msg.sender));
 
+        // console.log("craft queue length:", s.craftQueue.length);
+
         emit AddedToQueue(s.nextCraftId, _installationTypes[i], readyBlock, msg.sender);
+        s.nextCraftId++;
       }
-      s.nextCraftId++;
     }
     //after queue is over, user can claim installation
   }
@@ -263,7 +268,9 @@ contract InstallationFacet is Modifiers {
   function claimInstallations(uint256[] calldata _queueIds) external {
     for (uint8 i; i < _queueIds.length; i++) {
       uint256 queueId = _queueIds[i];
+
       QueueItem memory queueItem = s.craftQueue[queueId];
+
       require(msg.sender == queueItem.owner, "InstallationFacet: not owner");
       require(!queueItem.claimed, "InstallationFacet: already claimed");
 
@@ -271,9 +278,7 @@ contract InstallationFacet is Modifiers {
 
       // mint installation
       LibERC1155._safeMint(msg.sender, queueItem.installationType, queueItem.id);
-      // remove installation from queue array
-      s.craftQueue[queueId] = s.craftQueue[s.craftQueue.length - 1];
-      s.craftQueue.pop();
+      s.craftQueue[queueId].claimed = true;
       emit QueueClaimed(queueId);
     }
   }
@@ -442,6 +447,7 @@ contract InstallationFacet is Modifiers {
     for (uint16 i = 0; i < _installationTypes.length; i++) {
       s.installationTypes.push(
         InstallationType(
+          _installationTypes[i].deprecated,
           _installationTypes[i].installationType,
           _installationTypes[i].level,
           _installationTypes[i].width,

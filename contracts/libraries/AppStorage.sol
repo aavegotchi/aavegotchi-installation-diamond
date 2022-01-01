@@ -3,6 +3,7 @@ pragma solidity 0.8.9;
 import {LibDiamond} from "./LibDiamond.sol";
 
 struct InstallationType {
+  bool deprecated;
   uint16 installationType; //0 = harvester, 1 = reservoir, 2 = altar, 3 = gotchi lodge, 4 = wall, 5 = NFT display
   uint16 level;
   uint256 width;
