@@ -223,12 +223,12 @@ contract InstallationFacet is Modifiers {
       //take the required alchemica
       InstallationType memory installationType = s.installationTypes[_installationTypes[i]];
       for (uint8 j = 0; j < installationType.alchemicaCost.length; j++) {
+        //@todo: ensure this reverts if funds are insufficient
         LibERC20.transferFrom(s.alchemicaAddresses[j], msg.sender, address(this), s.installationTypes[_installationTypes[i]].alchemicaCost[j]);
       }
 
-      if(installationType.craftTime == 0) {
-        LibERC1155.addToOwner(msg.sender, _installationTypes[i], 1);
-        emit LibERC1155.TransferSingle(address(this), address(0), msg.sender, _installationTypes[i], 1);
+      if (installationType.craftTime == 0) {
+        LibERC1155._safeMint(msg.sender, _installationTypes[i], 0);
       } else {
         uint256 readyBlock = block.number + installationType.craftTime;
 

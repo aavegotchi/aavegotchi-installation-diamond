@@ -53,15 +53,20 @@ library LibERC1155 {
     uint256 _queueId
   ) internal {
     AppStorage storage s = LibAppStorage.diamondStorage();
-    if (s.installationTypes[_installationId].level == 1) {
-      require(!s.craftQueue[_queueId].claimed, "LibERC1155: tokenId already minted");
-      require(s.craftQueue[_queueId].owner == _to, "LibERC1155: wrong owner");
-      s.craftQueue[_queueId].claimed = true;
-    } else {
-      require(!s.upgradeQueue[_queueId].claimed, "LibERC1155: tokenId already minted");
-      require(s.upgradeQueue[_queueId].owner == _to, "LibERC1155: wrong owner");
-      s.upgradeQueue[_queueId].claimed = true;
+
+    //Only use queue when craft-time is > 0
+    if (s.installationTypes[_installationId].craftTime > 0) {
+      if (s.installationTypes[_installationId].level == 1) {
+        require(!s.craftQueue[_queueId].claimed, "LibERC1155: tokenId already minted");
+        require(s.craftQueue[_queueId].owner == _to, "LibERC1155: wrong owner");
+        s.craftQueue[_queueId].claimed = true;
+      } else {
+        require(!s.upgradeQueue[_queueId].claimed, "LibERC1155: tokenId already minted");
+        require(s.upgradeQueue[_queueId].owner == _to, "LibERC1155: wrong owner");
+        s.upgradeQueue[_queueId].claimed = true;
+      }
     }
+
     addToOwner(_to, _installationId, 1);
     emit MintInstallation(_to, _installationId, _queueId);
     emit LibERC1155.TransferSingle(address(this), address(0), _to, _installationId, 1);
