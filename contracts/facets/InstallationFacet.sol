@@ -223,11 +223,12 @@ contract InstallationFacet is Modifiers {
       //take the required alchemica
       InstallationType memory installationType = s.installationTypes[_installationTypes[i]];
       for (uint8 j = 0; j < installationType.alchemicaCost.length; j++) {
+        //@todo: ensure this reverts if funds are insufficient
         LibERC20.transferFrom(s.alchemicaAddresses[j], msg.sender, address(this), s.installationTypes[_installationTypes[i]].alchemicaCost[j]);
       }
 
-      if(installationType.craftTime == 0) {
-        LibERC1155._safeMint(msg.sender, _installationTypes[i], s.nextCraftId);
+      if (installationType.craftTime == 0) {
+        LibERC1155._safeMint(msg.sender, _installationTypes[i], 0);
       } else {
         uint256 readyBlock = block.number + installationType.craftTime;
 
@@ -236,8 +237,8 @@ contract InstallationFacet is Modifiers {
         s.craftQueue.push(QueueItem(s.nextCraftId, readyBlock, _installationTypes[i], false, msg.sender));
 
         emit AddedToQueue(s.nextCraftId, _installationTypes[i], readyBlock, msg.sender);
+        s.nextCraftId++;
       }
-      s.nextCraftId++;
     }
     //after queue is over, user can claim installation
   }
